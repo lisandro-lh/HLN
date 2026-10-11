@@ -139,4 +139,146 @@
             // PENCARIAN PINTAR BARIS HEADER UTAMA (Melompati baris-baris tidak penting seperti "Acak Ulang" atau "Total")
             let headerRowIndex = 0;
             for(let i = 0; i < Math.min(6, data2D.length); i++) {
-                if(
+                if(data2D[i] && data2D[i].some(cell => cell.toString().toLowerCase().includes('jenis lomba') || cell.toString().toLowerCase() === 'no')) {
+                    headerRowIndex = i;
+                    break;
+                }
+            }
+            const headerRow = data2D[headerRowIndex];
+
+            // 1. Ekstrak Pemain & Tim ke dalam Dictionary (Untuk Panel Kanan)
+            for (let r = headerRowIndex + 1; r < data2D.length; r++) {
+                let row = data2D[r];
+                if (!row || row.length < 2) continue;
+                
+                let nama = row[1] ? row[1].toString().trim() : "";
+                let tim = row[4] ? row[4].toString().trim() : nama;
+
+                // Olahraga Individu
+                if (jenisLomba.includes("ludo") || jenisLomba.includes("karaoke") || jenisLomba.includes("ps 5")) {
+                    if (nama) globalTeamsMap[nama] = [nama];
+                } 
+                // Olahraga Tim/Ganda
+                else {
+                    let a1 = row[5] ? row[5].toString().trim() : "";
+                    let a2 = row[6] ? row[6].toString().trim() : "";
+                    
+                    if (tim) {
+                        if (!globalTeamsMap[tim]) globalTeamsMap[tim] = [];
+                        
+                        // Jika Volly, namanya biasa ada di kolom 1, jika yang lain (Ganda/Regu), namanya di kolom 5 & 6
+                        if (jenisLomba.includes("volly")) {
+                            if (nama && !globalTeamsMap[tim].includes(nama)) globalTeamsMap[tim].push(nama);
+                        } else {
+                            if (a1 && a1 !== "-" && !globalTeamsMap[tim].includes(a1)) globalTeamsMap[tim].push(a1);
+                            if (a2 && a2 !== "-" && !globalTeamsMap[tim].includes(a2)) globalTeamsMap[tim].push(a2);
+                        }
+                    }
+                }
+            }
+
+            // 2. Tentukan di kolom berapa letak "Bagan/Match" dimulai
+            let startCol = -1; 
+            for (let i = 4; i < headerRow.length; i++) {
+                let h = headerRow[i] ? headerRow[i].toString().toLowerCase() : "";
+                // Kata kunci yang menandakan area BAGAN perlombaan dimulai
+                if (h.includes("babak") || h.includes("penyisihan") || h.includes("perempat") || h.includes("urutan") || h.includes("meja") || h.includes("undian")) {
+                    startCol = i;
+                    break;
+                }
+            }
+            if(startCol === -1) startCol = 7; // Fallback darurat
+
+            // 3. Bangun Tabel Visual (Menyerupai Kanban/Bagan Board) HANYA untuk kolom Bagan
+            let html = '<table class="w-full text-sm border-separate" style="border-spacing: 6px;">';
+            
+            // Render Judul Kolom (Header)
+            html += '<thead><tr>';
+            for (let c = startCol; c < headerRow.length; c++) {
+                let text = headerRow[c] ? headerRow[c].toString() : "";
+                if(text.toLowerCase().includes('helper')) continue; // Sembunyikan kolom helper
+                html += `<th class="p-3 text-center bg-blue-600 text-white font-bold whitespace-nowrap rounded-lg shadow-sm sticky top-0 z-10">${text}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+
+            // Render Isi Baris/Sel (Kartu Bagan)
+            for (let r = headerRowIndex + 1; r < data2D.length; r++) {
+                let rowEmpty = true;
+                let rowHtml = '<tr>';
+                
+                for (let c = startCol; c < headerRow.length; c++) {
+                    let textHeader = headerRow[c] ? headerRow[c].toString().toLowerCase() : "";
+                    if(textHeader.includes('helper')) continue;
+
+                    let cell = data2D[r][c] ? data2D[r][c].toString().trim() : "";
+                    if (cell !== "") rowEmpty = false;
+
+                    let cellStyle = "min-w-[160px] h-full p-2 flex items-center justify-center text-center transition-all duration-200 rounded-lg ";
+                    let innerHtml = cell;
+                    let onClick = "";
+
+                    // Logika Pewarnaan Pintar:
+                    if (cell === "") {
+                        cellStyle += "bg-transparent"; 
+                    } 
+                    else if (cell.toLowerCase().includes("match") || cell.toLowerCase().includes("menunggu") || cell.toLowerCase().includes("kalah") || cell.toLowerCase().includes("sesi") || cell.toLowerCase().includes("bye")) {
+                        // Label Info / Pertandingan (Abu-abu)
+                        cellStyle += "text-[11px] font-bold text-gray-500 bg-gray-100 uppercase tracking-wide border border-gray-200";
+                    } 
+                    else if (cell.includes("TIM") || cell.includes("Juara") || cell.includes("🏆") || cell.includes("🥇") || cell.includes("🥈") || cell.includes("🥉") || globalTeamsMap[cell]) {
+                        // Kartu Tim / Pemain yang aktif (Biru)
+                        cellStyle += "font-bold text-blue-900 bg-blue-50 border-2 border-blue-200 shadow-sm";
+                        
+                        // Buat bisa diklik hanya jika tim/peserta dikenali di sistem
+                        if (globalTeamsMap[cell]) {
+                            cellStyle += " cursor-pointer hover:bg-blue-200 hover:-translate-y-1";
+                            onClick = `onclick="lihatDetailTim('${cell.replace(/'/g, "\\'")}')"`;
+                        }
+                    } 
+                    else {
+                        // Kartu Skor / Poin / Default (Putih)
+                        cellStyle += "font-semibold text-gray-700 bg-white border border-gray-200 shadow-sm";
+                    }
+
+                    rowHtml += `<td class="p-0 align-middle h-[45px]"><div class="${cellStyle}" ${onClick}>${innerHtml}</div></td>`;
+                }
+                rowHtml += '</tr>';
+                
+                // Jangan tampilkan jika sebaris penuh kosong
+                if (!rowEmpty) html += rowHtml; 
+            }
+            html += '</tbody></table>';
+            
+            baganContainer.innerHTML = html;
+        }
+
+        // FUNGSI UNTUK MENAMPILKAN DETAIL TIM DI PANEL KANAN
+        function lihatDetailTim(namaTim) {
+            const listPeserta = document.getElementById('list-peserta');
+            const anggota = globalTeamsMap[namaTim];
+
+            if (!anggota || anggota.length === 0) return;
+
+            let detailHtml = `
+                <div class="w-full text-left animate-fade-in">
+                    <div class="bg-blue-600 text-white p-3 rounded-t-lg shadow-sm text-center font-bold text-lg">
+                        ${namaTim}
+                    </div>
+                    <ul class="divide-y divide-gray-100 bg-white border border-gray-200 rounded-b-lg shadow-sm">
+            `;
+            
+            anggota.forEach((nama) => {
+                detailHtml += `
+                    <li class="p-3 text-gray-700 flex items-center font-medium">
+                        <i class="fa-solid fa-user text-blue-400 mr-3"></i> ${nama}
+                    </li>
+                `;
+            });
+
+            detailHtml += `</ul></div>`;
+            listPeserta.className = "bg-white rounded-lg p-2 flex-1 overflow-y-auto";
+            listPeserta.innerHTML = detailHtml;
+        }
+    </script>
+</body>
+</html>
