@@ -121,6 +121,7 @@
             if(!data || data.length === 0) {
                 listPeserta.innerHTML = `<div class="text-center mt-10"><i class="fa-regular fa-folder-open text-4xl text-gray-300 mb-2"></i><p class="text-gray-500">Belum ada data pendaftar.</p></div>`;
                 document.getElementById('bagan-container').innerHTML = '';
+                document.getElementById('judul-peserta').innerText = "Daftar Tim & Peserta";
                 return;
             }
 
@@ -137,33 +138,42 @@
                 teamsMap[teamName].push(p.nama);
             });
 
+            // 1. TAMPILKAN JUMLAH TIM/PESERTA DI JUDUL DAFTAR
+            document.getElementById('judul-peserta').innerHTML = `Daftar Peserta <span class="text-sm bg-blue-600 text-white px-2 py-1 rounded-full ml-2 shadow-sm">${uniqueTeamsArray.length} Tim/Peserta</span>`;
+
             // TAMPILKAN LIST DI SEBELAH KIRI
             listPeserta.innerHTML = '';
             uniqueTeamsArray.forEach(tim => {
+                const jmlAnggota = teamsMap[tim].length;
                 const teamDiv = document.createElement('div');
-                teamDiv.className = "mb-4 border border-blue-200 rounded-lg overflow-hidden";
+                teamDiv.className = "mb-3 border border-blue-200 rounded-lg overflow-hidden";
+                
+                // Tampilan Nama Tim dan Jumlah Anggota
                 teamDiv.innerHTML = `
-                    <div class="bg-blue-100 px-4 py-2 font-bold text-blue-900 border-b border-blue-200 flex justify-between items-center">
-                        <span><i class="fa-solid fa-users-line mr-2"></i>${tim}</span>
-                        <span class="text-xs bg-white text-blue-600 px-2 py-1 rounded-full shadow-sm">${teamsMap[tim].length} Anggota</span>
+                    <div class="bg-blue-100 px-4 py-3 font-bold text-blue-900 flex justify-between items-center ${jmlAnggota === 1 ? 'border-b border-blue-200' : ''}">
+                        <span><i class="fa-solid ${jmlAnggota > 1 ? 'fa-users' : 'fa-user'} mr-2"></i>${tim}</span>
+                        <span class="text-xs bg-white text-blue-600 px-2 py-1 rounded-full shadow-sm font-black">${jmlAnggota} Anggota</span>
                     </div>
                 `;
-                const ul = document.createElement('ul');
-                ul.className = "divide-y divide-gray-100 px-4 py-2 bg-white";
-                teamsMap[tim].forEach((pemain, index) => {
+
+                // 2. LOGIKA MENYEMBUNYIKAN NAMA PESERTA JIKA LEBIH DARI 1 ORANG
+                if (jmlAnggota === 1) {
+                    // Hanya tampilkan nama jika peserta tunggal (individu)
+                    const ul = document.createElement('ul');
+                    ul.className = "px-4 py-2 bg-white";
                     const li = document.createElement('li');
-                    li.className = "py-1.5 text-sm text-gray-700 flex items-center";
-                    li.innerHTML = `<span class="w-5 text-gray-400 text-xs font-bold">${index + 1}.</span> ${pemain}`;
+                    li.className = "text-sm text-gray-700 flex items-center font-medium";
+                    li.innerHTML = `<i class="fa-solid fa-angle-right text-gray-400 mr-2 text-xs"></i> ${teamsMap[tim][0]}`;
                     ul.appendChild(li);
-                });
-                teamDiv.appendChild(ul);
+                    teamDiv.appendChild(ul);
+                }
+                
                 listPeserta.appendChild(teamDiv);
             });
 
             // BUAT BAGAN OTOMATIS BERDASARKAN TIPE LOMBA
             renderBaganCerdas(uniqueTeamsArray, namaLomba);
         }
-
         // LOGIKA CERDAS: MENGUBAH TAMPILAN BERDASARKAN JENIS LOMBA
         function renderBaganCerdas(daftarTim, namaLomba) {
             const container = document.getElementById('bagan-container');
