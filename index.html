@@ -11,10 +11,11 @@
         .hidden-section { display: none; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .match-card { background: #ffffff; border-left: 4px solid #3b82f6; transition: transform 0.2s; }
-        .match-card:hover { transform: scale(1.02); border-left-color: #f59e0b; }
-        .team-clickable { cursor: pointer; transition: all 0.2s; }
-        .team-clickable:hover { background-color: #dbeafe; color: #1e3a8a; transform: scale(1.05); }
+        /* Kustomisasi Scrollbar untuk tabel bagan */
+        .custom-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen font-sans text-gray-800">
@@ -51,33 +52,36 @@
                     <i class="fa-solid fa-rotate-right mr-2"></i>Segarkan
                 </button>
             </div>
-            <p class="text-xs text-gray-500 mt-2">*Catatan: Pengisian skor/poin dan penetapan pemenang dilakukan langsung melalui Google Sheets.</p>
+            <p class="text-xs text-gray-500 mt-2">*Catatan: Pengisian skor dan penetapan pemenang dilakukan langsung melalui Google Sheets.</p>
         </div>
 
         <div id="detail-section" class="hidden-section">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Bagan Lomba -->
-                <div class="glass-card rounded-2xl p-6 flex flex-col h-[600px] lg:col-span-2">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                
+                <!-- Papan Bagan Lomba (Mengambil lebar mayoritas) -->
+                <div class="glass-card rounded-2xl p-6 flex flex-col h-[700px] lg:col-span-3">
                     <div class="mb-4 border-b pb-3 flex justify-between items-end">
                         <div>
                             <h3 class="text-xl font-bold text-blue-900" id="judul-bagan">Bagan Pertandingan</h3>
-                            <p class="text-xs text-gray-500 mt-1" id="info-bagan-tipe"><i class="fa-solid fa-sitemap mr-1"></i>Format menyesuaikan otomatis</p>
+                            <p class="text-xs text-gray-500 mt-1" id="info-bagan-tipe"><i class="fa-solid fa-sitemap mr-1"></i>Membaca alur aktual dari Spreadsheet</p>
                         </div>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded shadow-sm font-bold">Geser Kanan-Kiri & Klik Nama Peserta/Tim</span>
                     </div>
-                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 flex-1 overflow-y-auto relative shadow-inner" id="bagan-container">
+                    <div class="bg-gray-50 rounded-lg p-2 border border-gray-200 flex-1 overflow-auto relative shadow-inner custom-scroll" id="bagan-container">
                     </div>
                 </div>
 
-                <!-- Detail Peserta -->
-                <div class="glass-card rounded-2xl p-6 flex flex-col h-[600px] lg:col-span-1">
+                <!-- Panel Detail Peserta (Lebih Ramping) -->
+                <div class="glass-card rounded-2xl p-6 flex flex-col h-[700px] lg:col-span-1">
                     <div class="flex justify-between items-center mb-4 border-b pb-3">
-                        <h3 class="text-xl font-bold text-blue-900">Rincian Peserta</h3>
+                        <h3 class="text-xl font-bold text-blue-900">Detail Peserta</h3>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100 flex-1 overflow-y-auto flex flex-col items-center justify-center text-center" id="list-peserta">
                         <i class="fa-solid fa-hand-pointer text-4xl text-gray-300 mb-3"></i>
-                        <p class="text-gray-500 text-sm">Pilih (Klik) nama pada bagan di samping untuk melihat rincian.</p>
+                        <p class="text-gray-500 text-sm">Klik kartu berwana biru di bagan untuk melihat rincian anggota tim.</p>
                     </div>
                 </div>
+
             </div>
         </div>
     </main>
@@ -95,13 +99,16 @@
             if(select.value !== "") {
                 section.classList.remove('hidden-section');
                 const namaSheet = select.value; 
+                
                 document.getElementById('judul-bagan').innerText = "Bagan " + select.options[select.selectedIndex].text;
                 
+                // Reset detail tim
+                listPeserta.className = "bg-white rounded-lg p-4 border border-gray-100 flex-1 overflow-y-auto flex flex-col items-center justify-center text-center";
                 listPeserta.innerHTML = `
                     <i class="fa-solid fa-hand-pointer text-4xl text-gray-300 mb-3"></i>
-                    <p class="text-gray-500 text-sm">Pilih (Klik) nama pada bagan di samping untuk melihat rincian.</p>
+                    <p class="text-gray-500 text-sm">Klik kartu berwana biru di bagan untuk melihat rincian anggota tim.</p>
                 `;
-                baganContainer.innerHTML = '<div class="loader"></div><p class="text-center text-gray-500 text-sm mt-2">Menarik data terbaru dari Spreadsheet...</p>';
+                baganContainer.innerHTML = '<div class="loader mt-20"></div><p class="text-center text-gray-500 text-sm mt-2">Membaca susunan tabel dari Spreadsheet...</p>';
 
                 fetch(SCRIPT_URL + "?sheet=" + encodeURIComponent(namaSheet))
                     .then(response => response.json())
@@ -110,7 +117,7 @@
                             baganContainer.innerHTML = `<p class="text-red-500 text-center font-bold mt-5"><i class="fa-solid fa-triangle-exclamation"></i> ${result.error}</p>`;
                             return;
                         }
-                        prosesDataPeserta(result.data, namaSheet);
+                        prosesDataPeserta2D(result.data, namaSheet);
                     })
                     .catch(error => {
                         baganContainer.innerHTML = `<p class="text-red-500 text-center">Gagal menyambung ke server.</p>`;
@@ -120,147 +127,132 @@
             }
         }
 
-        function prosesDataPeserta(data, namaLomba) {
+        // FUNGSI BARU: Membaca struktur Grid Tabel langsung dari Spreadsheet
+        function prosesDataPeserta2D(data2D, namaLomba) {
             const baganContainer = document.getElementById('bagan-container');
-            if(!data || data.length === 0) {
+            
+            // Minimal harus ada judul, header total, dan baris header kolom
+            if(!data2D || data2D.length < 3) {
                 baganContainer.innerHTML = `<div class="text-center mt-10"><i class="fa-regular fa-folder-open text-4xl text-gray-300 mb-2"></i><p class="text-gray-500">Belum ada data pendaftar.</p></div>`;
                 return;
             }
 
             globalTeamsMap = {};
-            const uniqueTeamsArray = [];
             let jenisLomba = namaLomba.toLowerCase();
-            let isIndividu = jenisLomba.includes("karaoke") || jenisLomba.includes("ps 5");
+            const headerRow = data2D[2]; // Baris ke-3 (index 2) biasanya adalah header utama
 
-            if (isIndividu) {
-                data.forEach(p => {
-                    let namaPeserta = p.nama && p.nama.trim() !== "" ? p.nama : (p.tim || "KOSONG");
-                    uniqueTeamsArray.push(namaPeserta);
-                    globalTeamsMap[namaPeserta] = [namaPeserta];
-                });
-            } else {
-                // LOGIKA UNTUK LUDO/DOMINO (Sistem Meja) & CERDAS CERMAT/VOLLY (Sistem Tim)
-                data.forEach(p => {
-                    const teamName = p.tim && p.tim.trim() !== "" ? p.tim : (p.nama || "KOSONG"); 
-                    if (!globalTeamsMap[teamName]) {
-                        globalTeamsMap[teamName] = [];
-                        uniqueTeamsArray.push(teamName);
-                    }
-                    globalTeamsMap[teamName].push(p.nama);
-                });
-            }
-
-            renderBaganCerdas(uniqueTeamsArray, namaLomba);
-        }
-
-        function renderBaganCerdas(daftarTim, namaLomba) {
-            const container = document.getElementById('bagan-container');
-            const infoBagan = document.getElementById('info-bagan-tipe');
-            let html = '<div class="space-y-4">';
-            let matchNumber = 1;
-            let jenisLomba = namaLomba.toLowerCase();
-
-            // 1. FORMAT LUDO & DOMINO (SISTEM MEJA - NAMA LANGSUNG MUNCUL 4 ORANG)
-            if (jenisLomba.includes("ludo") || jenisLomba.includes("domino")) {
-                infoBagan.innerHTML = '<i class="fa-solid fa-dice mr-1 text-red-500"></i>Format: 4 Pemain per Meja (1 vs 1 vs 1 vs 1)';
+            // 1. Ekstrak Pemain & Tim ke dalam Dictionary (Untuk Panel Kanan)
+            for (let r = 3; r < data2D.length; r++) {
+                let row = data2D[r];
+                if (!row || row.length < 2) continue;
                 
-                daftarTim.forEach((namaMeja) => {
-                    let anggota = globalTeamsMap[namaMeja];
-                    let p1 = anggota[0] || "KOSONG";
-                    let p2 = anggota[1] || "KOSONG";
-                    let p3 = anggota[2] || "KOSONG";
-                    let p4 = anggota[3] || "KOSONG";
-                    
-                    html += `
-                    <div class="match-card rounded-lg p-4 shadow border border-gray-200">
-                        <div class="text-xs font-bold text-red-500 mb-3 border-b pb-1 flex justify-between">
-                            <span class="text-sm font-black uppercase text-blue-900">${namaMeja}</span>
-                        </div>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-sm font-bold text-gray-800">
-                            <div class="${p1 !== 'KOSONG' ? 'bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100">${p1}</div>
-                            <div class="${p2 !== 'KOSONG' ? 'bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100">${p2}</div>
-                            <div class="${p3 !== 'KOSONG' ? 'bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100">${p3}</div>
-                            <div class="${p4 !== 'KOSONG' ? 'bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100">${p4}</div>
-                        </div>
-                    </div>`;
-                });
-            } 
-            
-            // 2. FORMAT CERDAS CERMAT (3 TIM DALAM 1 PERTANDINGAN - 2 vs 2 vs 2)
-            else if (jenisLomba.includes("cerdas cermat")) {
-                infoBagan.innerHTML = '<i class="fa-solid fa-brain mr-1 text-green-500"></i>Format: 3 Tim per Match (2 vs 2 vs 2)';
-                for (let i = 0; i < daftarTim.length; i += 3) {
-                    let p1 = daftarTim[i];
-                    let p2 = daftarTim[i+1] || "KOSONG";
-                    let p3 = daftarTim[i+2] || "KOSONG";
-                    let matchName = "MATCH " + matchNumber;
-                    
-                    html += `
-                    <div class="match-card rounded-lg p-4 shadow border border-gray-200">
-                        <div class="text-xs font-bold text-green-600 mb-3 border-b pb-1">${matchName}</div>
-                        <div class="grid grid-cols-3 gap-2 text-center text-sm font-bold text-gray-800">
-                            <div class="${p1 !== 'KOSONG' ? 'team-clickable bg-green-50' : 'bg-gray-100'} p-3 rounded border border-green-100" onclick="${p1 !== 'KOSONG' ? `lihatDetailTim('${p1.replace(/'/g, "\\'")}')` : ''}">${p1}</div>
-                            <div class="${p2 !== 'KOSONG' ? 'team-clickable bg-green-50' : 'bg-gray-100'} p-3 rounded border border-green-100" onclick="${p2 !== 'KOSONG' ? `lihatDetailTim('${p2.replace(/'/g, "\\'")}')` : ''}">${p2}</div>
-                            <div class="${p3 !== 'KOSONG' ? 'team-clickable bg-green-50' : 'bg-gray-100'} p-3 rounded border border-green-100" onclick="${p3 !== 'KOSONG' ? `lihatDetailTim('${p3.replace(/'/g, "\\'")}')` : ''}">${p3}</div>
-                        </div>
-                    </div>`;
-                    matchNumber++;
+                let nama = row[1] ? row[1].trim() : "";
+                let tim = row[4] ? row[4].trim() : nama;
+
+                // Penyesuaian mapping untuk format Cerdas Cermat
+                if (jenisLomba.includes("cerdas")) {
+                    tim = row[4] ? row[4].trim() : "";
+                    let a1 = row[5] ? row[5].trim() : "";
+                    let a2 = row[6] ? row[6].trim() : "";
+                    if (tim) {
+                        if (!globalTeamsMap[tim]) globalTeamsMap[tim] = [];
+                        if (a1 && a1 !== "-" && !globalTeamsMap[tim].includes(a1)) globalTeamsMap[tim].push(a1);
+                        if (a2 && a2 !== "-" && !globalTeamsMap[tim].includes(a2)) globalTeamsMap[tim].push(a2);
+                    }
+                } 
+                // Olahraga Individu
+                else if (jenisLomba.includes("ludo") || jenisLomba.includes("karaoke") || jenisLomba.includes("ps 5")) {
+                    if (nama) globalTeamsMap[nama] = [nama];
+                } 
+                // Olahraga Beregu / Pasangan
+                else {
+                    if (nama && tim) {
+                        if (!globalTeamsMap[tim]) globalTeamsMap[tim] = [];
+                        if (!globalTeamsMap[tim].includes(nama)) globalTeamsMap[tim].push(nama);
+                    }
                 }
             }
 
-            // 3. FORMAT KARAOKE (TAMPIL INDIVIDU DENGAN TEMPAT SKOR/NILAI)
-            else if (jenisLomba.includes("karaoke")) {
-                infoBagan.innerHTML = '<i class="fa-solid fa-microphone mr-1 text-purple-500"></i>Format: Daftar Penampilan Individu';
-                for (let i = 0; i < daftarTim.length; i++) {
-                    let p1 = daftarTim[i];
-                    html += `
-                    <div class="match-card rounded-lg p-4 shadow border border-purple-200 flex justify-between items-center team-clickable" onclick="lihatDetailTim('${p1.replace(/'/g, "\\'")}')">
-                        <div class="flex items-center gap-4">
-                            <div class="bg-purple-100 text-purple-700 font-black h-10 w-10 flex items-center justify-center rounded-full">${matchNumber}</div>
-                            <div class="font-bold text-gray-800 text-lg">${p1}</div>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-xs text-gray-400 block mb-1">Skor Juri</span>
-                            <span class="bg-gray-100 px-4 py-1 rounded text-gray-600 font-mono font-bold">-</span>
-                        </div>
-                    </div>`;
-                    matchNumber++;
+            // 2. Tentukan di kolom berapa letak "Bagan" dimulai
+            let startCol = 7; // Default jika gagal mencari
+            for (let i = 4; i < headerRow.length; i++) {
+                let h = headerRow[i].toLowerCase();
+                // Kata kunci yang menandakan area Bagan perlombaan
+                if (h.includes("babak") || h.includes("penyisihan") || h.includes("perempat") || h.includes("urutan") || h.includes("meja") || h.includes("undian")) {
+                    startCol = i;
+                    break;
                 }
             }
-            
-            // 4. FORMAT STANDAR (TIM VS TIM / 1 VS 1) - VOLLY, BADMINTON, TENIS MEJA, PS 5
-            else {
-                infoBagan.innerHTML = '<i class="fa-solid fa-handshake-angle mr-1 text-blue-500"></i>Format: Matchup Duel (Tim A vs Tim B)';
-                for (let i = 0; i < daftarTim.length; i += 2) {
-                    let p1 = daftarTim[i];
-                    let p2 = daftarTim[i+1] || "BYE (Menunggu Lawan)";
-                    let matchName = "MATCH " + matchNumber;
 
-                    html += `
-                    <div class="match-card rounded-lg p-4 shadow border border-gray-200">
-                        <div class="text-xs font-bold text-blue-500 mb-3 border-b pb-1">${matchName}</div>
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1 text-center font-bold text-gray-800 p-3 rounded team-clickable bg-blue-50 border border-blue-100 break-words text-sm md:text-base" onclick="lihatDetailTim('${p1.replace(/'/g, "\\'")}')">${p1}</div>
-                            <div class="bg-gray-800 text-white rounded px-3 py-1 text-xs font-black mx-2 shadow-sm">VS</div>
-                            <div class="${p2 !== 'BYE (Menunggu Lawan)' ? 'team-clickable bg-blue-50 border-blue-100' : 'bg-gray-100 border-gray-200 text-gray-400'} flex-1 text-center font-bold p-3 rounded border break-words text-sm md:text-base" onclick="${p2 !== 'BYE (Menunggu Lawan)' ? `lihatDetailTim('${p2.replace(/'/g, "\\'")}')` : ''}">${p2}</div>
-                        </div>
-                    </div>`;
-                    matchNumber++;
-                }
+            // 3. Bangun Tabel Visual (Menyerupai Kanban/Bagan Board)
+            let html = '<table class="w-full text-sm border-separate" style="border-spacing: 6px;">';
+            
+            // Render Judul Kolom (Header)
+            html += '<thead><tr>';
+            for (let c = startCol; c < headerRow.length; c++) {
+                let text = headerRow[c] || "";
+                if(text.toLowerCase().includes('helper')) continue; // Sembunyikan kolom helper
+                html += `<th class="p-3 text-center bg-blue-600 text-white font-bold whitespace-nowrap rounded-lg shadow-sm sticky top-0 z-10">${text}</th>`;
             }
-            html += '</div>';
-            container.innerHTML = html;
+            html += '</tr></thead><tbody>';
+
+            // Render Isi Baris/Sel (Kartu Bagan)
+            for (let r = 3; r < data2D.length; r++) {
+                let rowEmpty = true;
+                let rowHtml = '<tr>';
+                
+                for (let c = startCol; c < headerRow.length; c++) {
+                    if(headerRow[c] && headerRow[c].toLowerCase().includes('helper')) continue;
+
+                    let cell = data2D[r][c] ? data2D[r][c].toString().trim() : "";
+                    if (cell !== "") rowEmpty = false;
+
+                    let cellStyle = "min-w-[160px] h-full p-2 flex items-center justify-center text-center transition-all duration-200 rounded-lg ";
+                    let innerHtml = cell;
+                    let onClick = "";
+
+                    // Logika Pewarnaan Pintar:
+                    if (cell === "") {
+                        cellStyle += "bg-transparent"; // Sel kosong tidak perlu berkotak
+                    } 
+                    else if (cell.toLowerCase().includes("match") || cell.toLowerCase().includes("menunggu") || cell.toLowerCase().includes("kalah") || cell.toLowerCase().includes("sesi")) {
+                        // Label Info / Pertandingan
+                        cellStyle += "text-[11px] font-bold text-gray-500 bg-gray-100 uppercase tracking-wide border border-gray-200";
+                    } 
+                    else if (cell.includes("TIM") || cell.includes("Juara") || cell.includes("🏆") || cell.includes("🥇") || cell.includes("🥈") || cell.includes("🥉") || globalTeamsMap[cell]) {
+                        // Kartu Tim / Pemain yang aktif
+                        cellStyle += "font-bold text-blue-900 bg-blue-50 border-2 border-blue-200 shadow-sm";
+                        if (globalTeamsMap[cell] || cell.includes("TIM")) {
+                            cellStyle += " cursor-pointer hover:bg-blue-200 hover:-translate-y-1";
+                            onClick = `onclick="lihatDetailTim('${cell.replace(/'/g, "\\'")}')"`;
+                        }
+                    } 
+                    else {
+                        // Kartu Skor / Poin / Default
+                        cellStyle += "font-semibold text-gray-700 bg-white border border-gray-200 shadow-sm";
+                    }
+
+                    rowHtml += `<td class="p-0 align-middle h-[45px]"><div class="${cellStyle}" ${onClick}>${innerHtml}</div></td>`;
+                }
+                rowHtml += '</tr>';
+                
+                // Jangan tampilkan jika sebaris penuh kosong melompong
+                if (!rowEmpty) html += rowHtml; 
+            }
+            html += '</tbody></table>';
+            
+            baganContainer.innerHTML = html;
         }
 
-        // FUNGSI UNTUK MENAMPILKAN DETAIL TIM
+        // FUNGSI UNTUK MENAMPILKAN DETAIL TIM DI PANEL KANAN
         function lihatDetailTim(namaTim) {
             const listPeserta = document.getElementById('list-peserta');
             const anggota = globalTeamsMap[namaTim];
 
-            if (!anggota) return;
+            if (!anggota || anggota.length === 0) return;
 
             let detailHtml = `
-                <div class="w-full text-left">
+                <div class="w-full text-left animate-fade-in">
                     <div class="bg-blue-600 text-white p-3 rounded-t-lg shadow-sm text-center font-bold text-lg">
                         ${namaTim}
                     </div>
