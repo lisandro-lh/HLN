@@ -70,7 +70,7 @@
                     </div>
                 </div>
 
-                <!-- Detail Peserta (Lebih Bersih) -->
+                <!-- Detail Peserta -->
                 <div class="glass-card rounded-2xl p-6 flex flex-col h-[600px] lg:col-span-1">
                     <div class="flex justify-between items-center mb-4 border-b pb-3">
                         <h3 class="text-xl font-bold text-blue-900">Rincian Peserta</h3>
@@ -135,15 +135,33 @@
 
             globalTeamsMap = {};
             const uniqueTeamsArray = [];
+            let jenisLomba = namaLomba.toLowerCase();
+            
+            // CEK OTOMATIS: Apakah lomba ini butuh tim atau perorangan bebas?
+            let isIndividu = jenisLomba.includes("ludo") || jenisLomba.includes("domino") || jenisLomba.includes("karaoke") || jenisLomba.includes("ps 5");
 
-            data.forEach(p => {
-                const teamName = p.tim; 
-                if (!globalTeamsMap[teamName]) {
-                    globalTeamsMap[teamName] = [];
-                    uniqueTeamsArray.push(teamName);
-                }
-                globalTeamsMap[teamName].push(p.nama);
-            });
+            if (isIndividu) {
+                // LOGIKA UNTUK LUDO/DOMINO: 
+                // Abaikan pengelompokan "Tim". Langsung ambil nama peserta baris demi baris!
+                data.forEach(p => {
+                    let namaPeserta = p.nama && p.nama.trim() !== "" ? p.nama : (p.tim || "KOSONG");
+                    uniqueTeamsArray.push(namaPeserta);
+                    
+                    // Isi map tunggal agar tidak error saat namanya diklik di bagan
+                    globalTeamsMap[namaPeserta] = [namaPeserta];
+                });
+            } else {
+                // LOGIKA UNTUK VOLLY/CERDAS CERMAT/BADMINTON: 
+                // Kelompokkan peserta yang memiliki nama "Tim" yang sama
+                data.forEach(p => {
+                    const teamName = p.tim && p.tim.trim() !== "" ? p.tim : (p.nama || "KOSONG"); 
+                    if (!globalTeamsMap[teamName]) {
+                        globalTeamsMap[teamName] = [];
+                        uniqueTeamsArray.push(teamName);
+                    }
+                    globalTeamsMap[teamName].push(p.nama);
+                });
+            }
 
             // LANGSUNG RENDER BAGAN 
             renderBaganCerdas(uniqueTeamsArray, namaLomba);
@@ -173,10 +191,10 @@
                             <span>${matchName}</span>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-sm font-bold text-gray-800">
-                            <div class="${p1 !== 'KOSONG' ? 'team-clickable bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100" onclick="${p1 !== 'KOSONG' ? `lihatDetailTim('${p1}')` : ''}">${p1}</div>
-                            <div class="${p2 !== 'KOSONG' ? 'team-clickable bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100" onclick="${p2 !== 'KOSONG' ? `lihatDetailTim('${p2}')` : ''}">${p2}</div>
-                            <div class="${p3 !== 'KOSONG' ? 'team-clickable bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100" onclick="${p3 !== 'KOSONG' ? `lihatDetailTim('${p3}')` : ''}">${p3}</div>
-                            <div class="${p4 !== 'KOSONG' ? 'team-clickable bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100" onclick="${p4 !== 'KOSONG' ? `lihatDetailTim('${p4}')` : ''}">${p4}</div>
+                            <div class="${p1 !== 'KOSONG' ? 'team-clickable bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100" onclick="${p1 !== 'KOSONG' ? `lihatDetailTim('${p1.replace(/'/g, "\\'")}')` : ''}">${p1}</div>
+                            <div class="${p2 !== 'KOSONG' ? 'team-clickable bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100" onclick="${p2 !== 'KOSONG' ? `lihatDetailTim('${p2.replace(/'/g, "\\'")}')` : ''}">${p2}</div>
+                            <div class="${p3 !== 'KOSONG' ? 'team-clickable bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100" onclick="${p3 !== 'KOSONG' ? `lihatDetailTim('${p3.replace(/'/g, "\\'")}')` : ''}">${p3}</div>
+                            <div class="${p4 !== 'KOSONG' ? 'team-clickable bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100" onclick="${p4 !== 'KOSONG' ? `lihatDetailTim('${p4.replace(/'/g, "\\'")}')` : ''}">${p4}</div>
                         </div>
                     </div>`;
                     matchNumber++;
@@ -196,9 +214,9 @@
                     <div class="match-card rounded-lg p-4 shadow border border-gray-200">
                         <div class="text-xs font-bold text-green-600 mb-3 border-b pb-1">${matchName}</div>
                         <div class="grid grid-cols-3 gap-2 text-center text-sm font-bold text-gray-800">
-                            <div class="${p1 !== 'KOSONG' ? 'team-clickable bg-green-50' : 'bg-gray-100'} p-3 rounded border border-green-100" onclick="${p1 !== 'KOSONG' ? `lihatDetailTim('${p1}')` : ''}">${p1}</div>
-                            <div class="${p2 !== 'KOSONG' ? 'team-clickable bg-green-50' : 'bg-gray-100'} p-3 rounded border border-green-100" onclick="${p2 !== 'KOSONG' ? `lihatDetailTim('${p2}')` : ''}">${p2}</div>
-                            <div class="${p3 !== 'KOSONG' ? 'team-clickable bg-green-50' : 'bg-gray-100'} p-3 rounded border border-green-100" onclick="${p3 !== 'KOSONG' ? `lihatDetailTim('${p3}')` : ''}">${p3}</div>
+                            <div class="${p1 !== 'KOSONG' ? 'team-clickable bg-green-50' : 'bg-gray-100'} p-3 rounded border border-green-100" onclick="${p1 !== 'KOSONG' ? `lihatDetailTim('${p1.replace(/'/g, "\\'")}')` : ''}">${p1}</div>
+                            <div class="${p2 !== 'KOSONG' ? 'team-clickable bg-green-50' : 'bg-gray-100'} p-3 rounded border border-green-100" onclick="${p2 !== 'KOSONG' ? `lihatDetailTim('${p2.replace(/'/g, "\\'")}')` : ''}">${p2}</div>
+                            <div class="${p3 !== 'KOSONG' ? 'team-clickable bg-green-50' : 'bg-gray-100'} p-3 rounded border border-green-100" onclick="${p3 !== 'KOSONG' ? `lihatDetailTim('${p3.replace(/'/g, "\\'")}')` : ''}">${p3}</div>
                         </div>
                     </div>`;
                     matchNumber++;
@@ -211,7 +229,7 @@
                 for (let i = 0; i < daftarTim.length; i++) {
                     let p1 = daftarTim[i];
                     html += `
-                    <div class="match-card rounded-lg p-4 shadow border border-purple-200 flex justify-between items-center team-clickable" onclick="lihatDetailTim('${p1}')">
+                    <div class="match-card rounded-lg p-4 shadow border border-purple-200 flex justify-between items-center team-clickable" onclick="lihatDetailTim('${p1.replace(/'/g, "\\'")}')">
                         <div class="flex items-center gap-4">
                             <div class="bg-purple-100 text-purple-700 font-black h-10 w-10 flex items-center justify-center rounded-full">${matchNumber}</div>
                             <div class="font-bold text-gray-800 text-lg">${p1}</div>
@@ -237,11 +255,11 @@
                     <div class="match-card rounded-lg p-4 shadow border border-gray-200">
                         <div class="text-xs font-bold text-blue-500 mb-3 border-b pb-1">${matchName}</div>
                         <div class="flex items-center justify-between">
-                            <div class="flex-1 text-center font-bold text-gray-800 p-3 rounded team-clickable bg-blue-50 border border-blue-100 break-words text-sm md:text-base" onclick="lihatDetailTim('${p1}')">${p1}</div>
+                            <div class="flex-1 text-center font-bold text-gray-800 p-3 rounded team-clickable bg-blue-50 border border-blue-100 break-words text-sm md:text-base" onclick="lihatDetailTim('${p1.replace(/'/g, "\\'")}')">${p1}</div>
                             
                             <div class="bg-gray-800 text-white rounded px-3 py-1 text-xs font-black mx-2 shadow-sm">VS</div>
                             
-                            <div class="${p2 !== 'BYE (Menunggu Lawan)' ? 'team-clickable bg-blue-50 border-blue-100' : 'bg-gray-100 border-gray-200 text-gray-400'} flex-1 text-center font-bold p-3 rounded border break-words text-sm md:text-base" onclick="${p2 !== 'BYE (Menunggu Lawan)' ? `lihatDetailTim('${p2}')` : ''}">${p2}</div>
+                            <div class="${p2 !== 'BYE (Menunggu Lawan)' ? 'team-clickable bg-blue-50 border-blue-100' : 'bg-gray-100 border-gray-200 text-gray-400'} flex-1 text-center font-bold p-3 rounded border break-words text-sm md:text-base" onclick="${p2 !== 'BYE (Menunggu Lawan)' ? `lihatDetailTim('${p2.replace(/'/g, "\\'")}')` : ''}">${p2}</div>
                         </div>
                     </div>`;
                     matchNumber++;
