@@ -57,27 +57,27 @@
         <div id="detail-section" class="hidden-section">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                <!-- Bagan Lomba (Ditampilkan Lebih Lebar) -->
+                <!-- Bagan Lomba -->
                 <div class="glass-card rounded-2xl p-6 flex flex-col h-[600px] lg:col-span-2">
                     <div class="mb-4 border-b pb-3 flex justify-between items-end">
                         <div>
                             <h3 class="text-xl font-bold text-blue-900" id="judul-bagan">Bagan Pertandingan</h3>
                             <p class="text-xs text-gray-500 mt-1" id="info-bagan-tipe"><i class="fa-solid fa-sitemap mr-1"></i>Format menyesuaikan otomatis</p>
                         </div>
-                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded shadow-sm">Klik nama tim untuk melihat anggota</span>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded shadow-sm">Klik nama di bagan untuk melihat detail</span>
                     </div>
                     <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 flex-1 overflow-y-auto relative shadow-inner" id="bagan-container">
                     </div>
                 </div>
 
-                <!-- Detail Tim & Peserta (Muncul saat tim diklik) -->
+                <!-- Detail Peserta (Lebih Bersih) -->
                 <div class="glass-card rounded-2xl p-6 flex flex-col h-[600px] lg:col-span-1">
                     <div class="flex justify-between items-center mb-4 border-b pb-3">
-                        <h3 class="text-xl font-bold text-blue-900" id="judul-peserta">Detail Tim</h3>
+                        <h3 class="text-xl font-bold text-blue-900">Rincian Peserta</h3>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-gray-100 flex-1 overflow-y-auto flex flex-col items-center justify-center text-center" id="list-peserta">
                         <i class="fa-solid fa-hand-pointer text-4xl text-gray-300 mb-3"></i>
-                        <p class="text-gray-500 text-sm">Pilih (Klik) salah satu tim pada bagan di samping untuk melihat rincian anggota tim.</p>
+                        <p class="text-gray-500 text-sm">Pilih (Klik) nama pada bagan di samping untuk melihat rincian.</p>
                     </div>
                 </div>
 
@@ -87,7 +87,7 @@
 
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqEeykjmYojUkO3SNrg20HwOHmOntRpGRNfLclIDlSa8RZ2C3YD9Zq6KtCGG6BQSVf/exec';
-        let globalTeamsMap = {}; // Untuk menyimpan data anggota tim
+        let globalTeamsMap = {}; 
 
         function showLombaDetails() {
             const select = document.getElementById('lomba-select');
@@ -104,7 +104,7 @@
                 // Reset detail tim
                 listPeserta.innerHTML = `
                     <i class="fa-solid fa-hand-pointer text-4xl text-gray-300 mb-3"></i>
-                    <p class="text-gray-500 text-sm">Pilih (Klik) salah satu tim pada bagan di samping untuk melihat rincian anggota tim.</p>
+                    <p class="text-gray-500 text-sm">Pilih (Klik) nama pada bagan di samping untuk melihat rincian.</p>
                 `;
                 baganContainer.innerHTML = '<div class="loader"></div><p class="text-center text-gray-500 text-sm mt-2">Menarik data terbaru dari Spreadsheet...</p>';
 
@@ -145,7 +145,7 @@
                 globalTeamsMap[teamName].push(p.nama);
             });
 
-            // LANGSUNG RENDER BAGAN SAJA (List detail hanya saat diklik)
+            // LANGSUNG RENDER BAGAN 
             renderBaganCerdas(uniqueTeamsArray, namaLomba);
         }
 
@@ -157,9 +157,9 @@
             
             let jenisLomba = namaLomba.toLowerCase();
 
-            // 1. FORMAT LUDO & DOMINO (4 ORANG/TIM DALAM 1 PERTANDINGAN - 1v1v1v1)
+            // 1. FORMAT LUDO & DOMINO (4 PESERTA DALAM 1 PERTANDINGAN - 1v1v1v1)
             if (jenisLomba.includes("ludo") || jenisLomba.includes("domino")) {
-                infoBagan.innerHTML = '<i class="fa-solid fa-dice mr-1 text-red-500"></i>Format: 4 Pemain/Tim per Match (1 vs 1 vs 1 vs 1)';
+                infoBagan.innerHTML = '<i class="fa-solid fa-dice mr-1 text-red-500"></i>Format: 4 Pemain per Match (1 vs 1 vs 1 vs 1)';
                 for (let i = 0; i < daftarTim.length; i += 4) {
                     let p1 = daftarTim[i];
                     let p2 = daftarTim[i+1] || "KOSONG";
@@ -183,9 +183,9 @@
                 }
             } 
             
-            // 2. FORMAT CERDAS CERMAT (3 TIM DALAM 1 PERTANDINGAN - 1v1v1)
+            // 2. FORMAT CERDAS CERMAT (3 TIM DALAM 1 PERTANDINGAN - 2 vs 2 vs 2)
             else if (jenisLomba.includes("cerdas cermat")) {
-                infoBagan.innerHTML = '<i class="fa-solid fa-brain mr-1 text-green-500"></i>Format: 3 Tim per Match (Sistem Gugur/Penyisihan 1 vs 1 vs 1)';
+                infoBagan.innerHTML = '<i class="fa-solid fa-brain mr-1 text-green-500"></i>Format: 3 Tim per Match (2 vs 2 vs 2)';
                 for (let i = 0; i < daftarTim.length; i += 3) {
                     let p1 = daftarTim[i];
                     let p2 = daftarTim[i+1] || "KOSONG";
@@ -252,28 +252,26 @@
             container.innerHTML = html;
         }
 
-        // FUNGSI UNTUK MENAMPILKAN DETAIL TIM SAAT DIKLIK DARI BAGAN
+        // FUNGSI UNTUK MENAMPILKAN DETAIL TIM (DIBERSIHKAN DARI HEADER TIDAK PERLU)
         function lihatDetailTim(namaTim) {
             const listPeserta = document.getElementById('list-peserta');
             const anggota = globalTeamsMap[namaTim];
 
             if (!anggota) return;
 
-            // Render ke kolom kanan (Detail Tim)
+            // Tampilan detail disederhanakan: Hanya Label Utama dan Daftar Nama
             let detailHtml = `
                 <div class="w-full text-left">
-                    <div class="bg-blue-600 text-white p-4 rounded-t-lg shadow-sm mb-1 text-center">
-                        <h4 class="font-extrabold text-xl">${namaTim}</h4>
-                        <p class="text-xs text-blue-200 mt-1">${anggota.length} Anggota Terdaftar</p>
+                    <div class="bg-blue-600 text-white p-3 rounded-t-lg shadow-sm text-center font-bold text-lg">
+                        ${namaTim}
                     </div>
                     <ul class="divide-y divide-gray-100 bg-white border border-gray-200 rounded-b-lg shadow-sm">
             `;
             
-            anggota.forEach((nama, index) => {
+            anggota.forEach((nama) => {
                 detailHtml += `
                     <li class="p-3 text-gray-700 flex items-center font-medium">
-                        <span class="bg-blue-100 text-blue-700 text-xs font-bold h-6 w-6 flex items-center justify-center rounded-full mr-3">${index + 1}</span> 
-                        ${nama}
+                        <i class="fa-solid fa-user text-blue-400 mr-3"></i> ${nama}
                     </li>
                 `;
             });
