@@ -15,10 +15,7 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .glass-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
+        .hidden-section { display: none; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen font-sans text-gray-800">
@@ -29,22 +26,19 @@
             <!-- Logo PLN -->
             <img src="https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png" alt="Logo PLN" class="h-12 md:h-16 object-contain">
             
-            <!-- Title -->
             <div class="text-center flex-1 mx-4">
                 <h1 class="text-xl md:text-3xl font-extrabold text-blue-900 tracking-tight">HLN UP3 TOBELO 2026</h1>
                 <p class="text-sm md:text-base text-gray-600 font-medium mt-1">Dashboard Pendaftaran & Bagan Lomba</p>
             </div>
 
-            <!-- Logo DANATARA (Using text styling as placeholder, can be replaced with img tag) -->
+            <!-- Logo DANATARA -->
             <div class="h-12 md:h-16 flex items-center justify-center border-2 border-gray-800 px-4 font-bold text-gray-800 tracking-widest uppercase bg-gray-50">
                 DANATARA
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
-        
         <!-- Summary Stats -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <div class="bg-blue-600 text-white rounded-2xl p-6 shadow-md flex items-center space-x-4">
@@ -70,51 +64,95 @@
             </div>
         </div>
 
-        <!-- Competition Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="competition-grid">
-            <!-- Data will be injected here via JS -->
+        <!-- Controls: Dropdown Lomba -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8 text-center max-w-2xl mx-auto">
+            <label for="lomba-select" class="block text-lg font-bold text-gray-700 mb-3">Pilih Cabang Lomba:</label>
+            <select id="lomba-select" onchange="showLombaDetails()" class="w-full text-lg p-3 border-2 border-blue-300 rounded-lg focus:outline-none focus:border-blue-600 bg-blue-50">
+                <option value="">-- Silakan Pilih Lomba --</option>
+                <option value="Ludo">Ludo</option>
+                <option value="Domino">Domino</option>
+                <option value="Volly">Bola Volly</option>
+                <option value="PS5">PlayStation 5</option>
+                <option value="Badminton">Badminton</option>
+                <option value="TenisMeja">Tenis Meja</option>
+                <option value="Karaoke">Karaoke</option>
+                <option value="CerdasCermat">Cerdas Cermat</option>
+            </select>
         </div>
 
+        <!-- Detail Lomba Section (Hidden by default) -->
+        <div id="detail-section" class="hidden-section">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Daftar Peserta & Edit -->
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-2xl font-bold text-blue-900" id="judul-peserta">Daftar Peserta</h3>
+                        <button onclick="editData()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-bold transition">
+                            <i class="fa-solid fa-pen-to-square mr-2"></i>Edit Data
+                        </button>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 h-64 overflow-y-auto" id="list-peserta">
+                        <!-- List Peserta muncul di sini -->
+                        <ul class="list-disc pl-5 text-gray-700 space-y-2">
+                            <li>Peserta 1 - Unit A</li>
+                            <li>Peserta 2 - Unit B</li>
+                            <li>Peserta 3 - Unit C</li>
+                            <li><em class="text-gray-400">Data diambil dari Google Sheets...</em></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Bagan Lomba -->
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-2xl font-bold text-blue-900 mb-4" id="judul-bagan">Bagan Pertandingan</h3>
+                    <div class="bg-white rounded-lg p-4 border border-gray-200 flex items-center justify-center h-64 shadow-inner">
+                        <div class="text-center">
+                            <i class="fa-solid fa-sitemap text-5xl text-gray-300 mb-3"></i>
+                            <p class="text-gray-500" id="info-bagan">Pilih lomba untuk melihat bagan.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </main>
 
-    <!-- Footer -->
     <footer class="text-center py-6 text-gray-500 text-sm mt-auto">
         &copy; 2026 PLN UP3 Tobelo & DANATARA. All rights reserved.
     </footer>
 
-    <!-- Script for Dynamic Data -->
+    <!-- Logika Interaktif -->
     <script>
-        // Data dari Google Sheets Anda
-        const lombaData = [
-            { nama: "Ludo", peserta: 46, format: "1 vs 1 vs 1 vs 1", icon: "fa-dice", color: "text-red-500", bg: "bg-red-100" },
-            { nama: "Domino", peserta: 37, format: "Beregu 2 vs 2", icon: "fa-shapes", color: "text-gray-700", bg: "bg-gray-200" },
-            { nama: "Bola Volly", peserta: 33, format: "6 Orang / Tim", icon: "fa-volleyball", color: "text-orange-500", bg: "bg-orange-100" },
-            { nama: "PlayStation 5", peserta: 30, format: "1 vs 1", icon: "fa-gamepad", color: "text-blue-500", bg: "bg-blue-100" },
-            { nama: "Badminton", peserta: 27, format: "Ganda", icon: "fa-table-tennis-paddle-ball", color: "text-green-600", bg: "bg-green-100" },
-            { nama: "Tenis Meja", peserta: 16, format: "Ganda", icon: "fa-table-tennis", color: "text-teal-600", bg: "bg-teal-100" },
-            { nama: "Karaoke", peserta: 12, format: "Perorangan", icon: "fa-microphone", color: "text-purple-500", bg: "bg-purple-100" },
-            { nama: "Cerdas Cermat", peserta: 10, format: "2 Orang / Regu", icon: "fa-brain", color: "text-yellow-600", bg: "bg-yellow-100" }
-        ];
+        // Fungsi untuk menampilkan data saat Dropdown dipilih
+        function showLombaDetails() {
+            const select = document.getElementById('lomba-select');
+            const section = document.getElementById('detail-section');
+            const judulPeserta = document.getElementById('judul-peserta');
+            const infoBagan = document.getElementById('info-bagan');
+            
+            if(select.value !== "") {
+                section.classList.remove('hidden-section');
+                
+                // Update teks sesuai pilihan
+                const namaLomba = select.options[select.selectedIndex].text;
+                judulPeserta.innerText = "Daftar Peserta - " + namaLomba;
+                
+                // Simulasi memuat bagan (Nantinya diganti dengan gambar bagan asli/URL iframe sheet)
+                infoBagan.innerHTML = `Bagan untuk <strong>${namaLomba}</strong> sedang disiapkan dari Spreadsheet.`;
+                
+                // TODO: Di sini nanti ditempatkan fungsi "fetch()" untuk menarik data betulan dari Google Apps Script
+            } else {
+                section.classList.add('hidden-section');
+            }
+        }
 
-        const grid = document.getElementById('competition-grid');
-
-        lombaData.forEach(lomba => {
-            const card = document.createElement('div');
-            card.className = "glass-card rounded-2xl p-6 relative overflow-hidden group cursor-pointer";
-            card.innerHTML = `
-                <div class="flex justify-between items-start mb-4 relative z-10">
-                    <div class="${lomba.bg}${lomba.color} p-3 rounded-xl">
-                        <i class="fa-solid ${lomba.icon} text-2xl"></i>
-                    </div>
-                    <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-200">
-                        ${lomba.format}
-                    </span>
-                </div>
-                <div class="relative z-10">
-                    <h3 class="text-xl font-bold text-gray-800 mb-1">${lomba.nama}</h3>
-                    <div class="flex items-center text-gray-600 mb-4">
-                        <i class="fa-solid fa-users mr-2 text-sm"></i>
-                        <span class="font-semibold">${lomba.peserta} Peserta</span>
-                    </div>
-                </div>
-                <button class="w-full bg-blue-900 hover:bg-blue-800 text-white font-medium py-2 rounded
+        // Fungsi ketika tombol Edit diklik
+        function editData() {
+            alert("Untuk mengedit dan menyimpan langsung ke Google Sheets secara otomatis dari web ini, kita perlu mengaktifkan 'Google Apps Script Web App'.\n\nSaat ini tombol ini adalah simulasi antarmuka.");
+            // Logika untuk menampilkan form edit akan masuk di sini
+        }
+    </script>
+</body>
+</html>
