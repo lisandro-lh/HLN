@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Lomba HLN UP3 Tobelo 2026</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen font-sans text-gray-800">
+
+    <!-- Header Section -->
+    <header class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <!-- Logo PLN -->
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png" alt="Logo PLN" class="h-12 md:h-16 object-contain">
+            
+            <!-- Title -->
+            <div class="text-center flex-1 mx-4">
+                <h1 class="text-xl md:text-3xl font-extrabold text-blue-900 tracking-tight">HLN UP3 TOBELO 2026</h1>
+                <p class="text-sm md:text-base text-gray-600 font-medium mt-1">Dashboard Pendaftaran & Bagan Lomba</p>
+            </div>
+
+            <!-- Logo DANATARA (Using text styling as placeholder, can be replaced with img tag) -->
+            <div class="h-12 md:h-16 flex items-center justify-center border-2 border-gray-800 px-4 font-bold text-gray-800 tracking-widest uppercase bg-gray-50">
+                DANATARA
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-blue-600 text-white rounded-2xl p-6 shadow-md flex items-center space-x-4">
+                <i class="fa-solid fa-users text-4xl opacity-80"></i>
+                <div>
+                    <p class="text-sm uppercase tracking-wider opacity-90">Total Pendaftar</p>
+                    <h2 class="text-3xl font-bold">74 Respon</h2>
+                </div>
+            </div>
+            <div class="bg-teal-500 text-white rounded-2xl p-6 shadow-md flex items-center space-x-4">
+                <i class="fa-solid fa-trophy text-4xl opacity-80"></i>
+                <div>
+                    <p class="text-sm uppercase tracking-wider opacity-90">Total Cabang Lomba</p>
+                    <h2 class="text-3xl font-bold">8 Cabang</h2>
+                </div>
+            </div>
+            <div class="bg-orange-500 text-white rounded-2xl p-6 shadow-md flex items-center space-x-4">
+                <i class="fa-solid fa-calendar-check text-4xl opacity-80"></i>
+                <div>
+                    <p class="text-sm uppercase tracking-wider opacity-90">Status</p>
+                    <h2 class="text-3xl font-bold">Penyisihan</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Competition Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="competition-grid">
+            <!-- Data will be injected here via JS -->
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-gray-500 text-sm mt-auto">
+        &copy; 2026 PLN UP3 Tobelo & DANATARA. All rights reserved.
+    </footer>
+
+    <!-- Script for Dynamic Data -->
+    <script>
+        // Data dari Google Sheets Anda
+        const lombaData = [
+            { nama: "Ludo", peserta: 46, format: "1 vs 1 vs 1 vs 1", icon: "fa-dice", color: "text-red-500", bg: "bg-red-100" },
+            { nama: "Domino", peserta: 37, format: "Beregu 2 vs 2", icon: "fa-shapes", color: "text-gray-700", bg: "bg-gray-200" },
+            { nama: "Bola Volly", peserta: 33, format: "6 Orang / Tim", icon: "fa-volleyball", color: "text-orange-500", bg: "bg-orange-100" },
+            { nama: "PlayStation 5", peserta: 30, format: "1 vs 1", icon: "fa-gamepad", color: "text-blue-500", bg: "bg-blue-100" },
+            { nama: "Badminton", peserta: 27, format: "Ganda", icon: "fa-table-tennis-paddle-ball", color: "text-green-600", bg: "bg-green-100" },
+            { nama: "Tenis Meja", peserta: 16, format: "Ganda", icon: "fa-table-tennis", color: "text-teal-600", bg: "bg-teal-100" },
+            { nama: "Karaoke", peserta: 12, format: "Perorangan", icon: "fa-microphone", color: "text-purple-500", bg: "bg-purple-100" },
+            { nama: "Cerdas Cermat", peserta: 10, format: "2 Orang / Regu", icon: "fa-brain", color: "text-yellow-600", bg: "bg-yellow-100" }
+        ];
+
+        const grid = document.getElementById('competition-grid');
+
+        lombaData.forEach(lomba => {
+            const card = document.createElement('div');
+            card.className = "glass-card rounded-2xl p-6 relative overflow-hidden group cursor-pointer";
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-4 relative z-10">
+                    <div class="${lomba.bg}${lomba.color} p-3 rounded-xl">
+                        <i class="fa-solid ${lomba.icon} text-2xl"></i>
+                    </div>
+                    <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-200">
+                        ${lomba.format}
+                    </span>
+                </div>
+                <div class="relative z-10">
+                    <h3 class="text-xl font-bold text-gray-800 mb-1">${lomba.nama}</h3>
+                    <div class="flex items-center text-gray-600 mb-4">
+                        <i class="fa-solid fa-users mr-2 text-sm"></i>
+                        <span class="font-semibold">${lomba.peserta} Peserta</span>
+                    </div>
+                </div>
+                <button class="w-full bg-blue-900 hover:bg-blue-800 text-white font-medium py-2 rounded
