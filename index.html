@@ -51,7 +51,7 @@
                     <i class="fa-solid fa-rotate-right mr-2"></i>Segarkan
                 </button>
             </div>
-            <p class="text-xs text-gray-500 mt-2">*Catatan: Pengisian skor dan penetapan pemenang dilakukan langsung melalui Google Sheets.</p>
+            <p class="text-xs text-gray-500 mt-2">*Catatan: Klik kotak berwarna kuning di bagan untuk mengisi skor langsung dari web.</p>
         </div>
 
         <div id="detail-section" class="hidden-section">
@@ -61,9 +61,9 @@
                     <div class="mb-4 border-b pb-3 flex justify-between items-end">
                         <div>
                             <h3 class="text-xl font-bold text-blue-900" id="judul-bagan">Bagan Pertandingan</h3>
-                            <p class="text-xs text-gray-500 mt-1" id="info-bagan-tipe"><i class="fa-solid fa-sitemap mr-1"></i>Membaca alur aktual dari Spreadsheet</p>
+                            <p class="text-xs text-gray-500 mt-1" id="info-bagan-tipe"><i class="fa-solid fa-sitemap mr-1"></i>Terkoneksi real-time dengan Spreadsheet</p>
                         </div>
-                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded shadow-sm font-bold">Geser Kanan-Kiri & Klik Nama Peserta/Tim</span>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded shadow-sm font-bold">Geser Kanan-Kiri & Klik Kotak Kuning Untuk Isi Skor</span>
                     </div>
                     <div class="bg-gray-50 rounded-lg p-2 border border-gray-200 flex-1 overflow-auto relative shadow-inner custom-scroll" id="bagan-container">
                     </div>
@@ -84,7 +84,8 @@
     </main>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9XPJUXElseUIR4V-CsBx8bpYytRTT1KmnKFPYNZRmFivPf5zPESPMZdW9Qly4z0_m/exec';
+        // URL API SUDAH DIGANTI DENGAN YANG TERBARU
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRHkwlcEA0R0-YQRPVnJT8fxJIDm-Cxs8EVnSO3CcCJ7Rv_l-4JzY3-FfNZXh23UDb/exec';
         let globalTeamsMap = {}; 
 
         function showLombaDetails() {
@@ -124,10 +125,8 @@
             }
         }
 
-        // FUNGSI BARU: Membaca struktur Grid Tabel langsung dari Spreadsheet
         function prosesDataPeserta2D(data2D, namaLomba) {
             const baganContainer = document.getElementById('bagan-container');
-            
             if(!data2D || data2D.length < 3) {
                 baganContainer.innerHTML = `<div class="text-center mt-10"><i class="fa-regular fa-folder-open text-4xl text-gray-300 mb-2"></i><p class="text-gray-500">Belum ada data pendaftar.</p></div>`;
                 return;
@@ -136,7 +135,6 @@
             globalTeamsMap = {};
             let jenisLomba = namaLomba.toLowerCase();
             
-            // PENCARIAN PINTAR BARIS HEADER UTAMA (Melompati baris-baris tidak penting seperti "Acak Ulang" atau "Total")
             let headerRowIndex = 0;
             for(let i = 0; i < Math.min(6, data2D.length); i++) {
                 if(data2D[i] && data2D[i].some(cell => cell.toString().toLowerCase().includes('jenis lomba') || cell.toString().toLowerCase() === 'no')) {
@@ -146,7 +144,7 @@
             }
             const headerRow = data2D[headerRowIndex];
 
-            // 1. Ekstrak Pemain & Tim ke dalam Dictionary (Untuk Panel Kanan)
+            // Ekstrak Pemain & Tim
             for (let r = headerRowIndex + 1; r < data2D.length; r++) {
                 let row = data2D[r];
                 if (!row || row.length < 2) continue;
@@ -154,19 +152,14 @@
                 let nama = row[1] ? row[1].toString().trim() : "";
                 let tim = row[4] ? row[4].toString().trim() : nama;
 
-                // Olahraga Individu
                 if (jenisLomba.includes("ludo") || jenisLomba.includes("karaoke") || jenisLomba.includes("ps 5")) {
                     if (nama) globalTeamsMap[nama] = [nama];
-                } 
-                // Olahraga Tim/Ganda
-                else {
+                } else {
                     let a1 = row[5] ? row[5].toString().trim() : "";
                     let a2 = row[6] ? row[6].toString().trim() : "";
                     
                     if (tim) {
                         if (!globalTeamsMap[tim]) globalTeamsMap[tim] = [];
-                        
-                        // Jika Volly, namanya biasa ada di kolom 1, jika yang lain (Ganda/Regu), namanya di kolom 5 & 6
                         if (jenisLomba.includes("volly")) {
                             if (nama && !globalTeamsMap[tim].includes(nama)) globalTeamsMap[tim].push(nama);
                         } else {
@@ -177,31 +170,26 @@
                 }
             }
 
-            // 2. Tentukan di kolom berapa letak "Bagan/Match" dimulai
             let startCol = -1; 
             for (let i = 4; i < headerRow.length; i++) {
                 let h = headerRow[i] ? headerRow[i].toString().toLowerCase() : "";
-                // Kata kunci yang menandakan area BAGAN perlombaan dimulai
                 if (h.includes("babak") || h.includes("penyisihan") || h.includes("perempat") || h.includes("urutan") || h.includes("meja") || h.includes("undian")) {
                     startCol = i;
                     break;
                 }
             }
-            if(startCol === -1) startCol = 7; // Fallback darurat
+            if(startCol === -1) startCol = 7; 
 
-            // 3. Bangun Tabel Visual (Menyerupai Kanban/Bagan Board) HANYA untuk kolom Bagan
+            // Bangun Tabel Visual
             let html = '<table class="w-full text-sm border-separate" style="border-spacing: 6px;">';
-            
-            // Render Judul Kolom (Header)
             html += '<thead><tr>';
             for (let c = startCol; c < headerRow.length; c++) {
                 let text = headerRow[c] ? headerRow[c].toString() : "";
-                if(text.toLowerCase().includes('helper')) continue; // Sembunyikan kolom helper
+                if(text.toLowerCase().includes('helper')) continue; 
                 html += `<th class="p-3 text-center bg-blue-600 text-white font-bold whitespace-nowrap rounded-lg shadow-sm sticky top-0 z-10">${text}</th>`;
             }
             html += '</tr></thead><tbody>';
 
-            // Render Isi Baris/Sel (Kartu Bagan)
             for (let r = headerRowIndex + 1; r < data2D.length; r++) {
                 let rowEmpty = true;
                 let rowHtml = '<tr>';
@@ -217,26 +205,30 @@
                     let innerHtml = cell;
                     let onClick = "";
 
-                    // Logika Pewarnaan Pintar:
-                    if (cell === "") {
+                    // LOGIKA CEK KOLOM SKOR / NILAI / POIN
+                    let isScoreCol = textHeader.includes("skor") || textHeader.includes("nilai") || textHeader.includes("poin") || textHeader.includes("(1-100)");
+
+                    if (isScoreCol) {
+                        // KARTU INPUT SKOR (KUNING)
+                        cellStyle += "font-mono font-bold text-yellow-800 bg-yellow-50 border-2 border-yellow-400 shadow-sm cursor-pointer hover:bg-yellow-200 hover:-translate-y-1";
+                        innerHtml = cell !== "" ? cell : "<span class='text-[11px] text-yellow-700'><i class='fa-solid fa-pen'></i> Isi Skor</span>";
+                        onClick = `onclick="editSkor('${namaLomba.replace(/'/g, "\\'")}', ${r + 1}, ${c + 1}, '${cell.replace(/'/g, "\\'")}', this)"`;
+                        rowEmpty = false; 
+                    }
+                    else if (cell === "") {
                         cellStyle += "bg-transparent"; 
                     } 
                     else if (cell.toLowerCase().includes("match") || cell.toLowerCase().includes("menunggu") || cell.toLowerCase().includes("kalah") || cell.toLowerCase().includes("sesi") || cell.toLowerCase().includes("bye")) {
-                        // Label Info / Pertandingan (Abu-abu)
                         cellStyle += "text-[11px] font-bold text-gray-500 bg-gray-100 uppercase tracking-wide border border-gray-200";
                     } 
                     else if (cell.includes("TIM") || cell.includes("Juara") || cell.includes("🏆") || cell.includes("🥇") || cell.includes("🥈") || cell.includes("🥉") || globalTeamsMap[cell]) {
-                        // Kartu Tim / Pemain yang aktif (Biru)
                         cellStyle += "font-bold text-blue-900 bg-blue-50 border-2 border-blue-200 shadow-sm";
-                        
-                        // Buat bisa diklik hanya jika tim/peserta dikenali di sistem
                         if (globalTeamsMap[cell]) {
                             cellStyle += " cursor-pointer hover:bg-blue-200 hover:-translate-y-1";
                             onClick = `onclick="lihatDetailTim('${cell.replace(/'/g, "\\'")}')"`;
                         }
                     } 
                     else {
-                        // Kartu Skor / Poin / Default (Putih)
                         cellStyle += "font-semibold text-gray-700 bg-white border border-gray-200 shadow-sm";
                     }
 
@@ -244,15 +236,52 @@
                 }
                 rowHtml += '</tr>';
                 
-                // Jangan tampilkan jika sebaris penuh kosong
                 if (!rowEmpty) html += rowHtml; 
             }
             html += '</tbody></table>';
-            
             baganContainer.innerHTML = html;
         }
 
-        // FUNGSI UNTUK MENAMPILKAN DETAIL TIM DI PANEL KANAN
+        // FUNGSI BARU: MENGIRIM SKOR/NILAI KE GOOGLE SHEET
+        function editSkor(namaLomba, row, col, currentScore, element) {
+            let newScore = prompt(`Masukkan Skor / Nilai (Sheet: ${namaLomba}):`, currentScore);
+            
+            if (newScore !== null && newScore.trim() !== currentScore) {
+                // Beri efek loading saat sedang mengirim
+                let originalHtml = element.innerHTML;
+                element.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Menyimpan...";
+                element.classList.add("opacity-50", "pointer-events-none");
+
+                const payload = {
+                    action: "update_score",
+                    sheetName: namaLomba,
+                    row: row,
+                    col: col,
+                    score: newScore
+                };
+
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.text())
+                .then(result => {
+                    if (result.includes("✅")) {
+                        showLombaDetails(); 
+                    } else {
+                        alert("Gagal menyimpan: " + result);
+                        element.innerHTML = originalHtml;
+                        element.classList.remove("opacity-50", "pointer-events-none");
+                    }
+                })
+                .catch(err => {
+                    alert("Koneksi gagal. Silakan coba tekan Segarkan.");
+                    element.innerHTML = originalHtml;
+                    element.classList.remove("opacity-50", "pointer-events-none");
+                });
+            }
+        }
+
         function lihatDetailTim(namaTim) {
             const listPeserta = document.getElementById('list-peserta');
             const anggota = globalTeamsMap[namaTim];
