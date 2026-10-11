@@ -56,7 +56,6 @@
 
         <div id="detail-section" class="hidden-section">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
                 <!-- Bagan Lomba -->
                 <div class="glass-card rounded-2xl p-6 flex flex-col h-[600px] lg:col-span-2">
                     <div class="mb-4 border-b pb-3 flex justify-between items-end">
@@ -64,7 +63,6 @@
                             <h3 class="text-xl font-bold text-blue-900" id="judul-bagan">Bagan Pertandingan</h3>
                             <p class="text-xs text-gray-500 mt-1" id="info-bagan-tipe"><i class="fa-solid fa-sitemap mr-1"></i>Format menyesuaikan otomatis</p>
                         </div>
-                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded shadow-sm">Klik nama di bagan untuk melihat detail</span>
                     </div>
                     <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 flex-1 overflow-y-auto relative shadow-inner" id="bagan-container">
                     </div>
@@ -80,7 +78,6 @@
                         <p class="text-gray-500 text-sm">Pilih (Klik) nama pada bagan di samping untuk melihat rincian.</p>
                     </div>
                 </div>
-
             </div>
         </div>
     </main>
@@ -98,10 +95,8 @@
             if(select.value !== "") {
                 section.classList.remove('hidden-section');
                 const namaSheet = select.value; 
-                
                 document.getElementById('judul-bagan').innerText = "Bagan " + select.options[select.selectedIndex].text;
                 
-                // Reset detail tim
                 listPeserta.innerHTML = `
                     <i class="fa-solid fa-hand-pointer text-4xl text-gray-300 mb-3"></i>
                     <p class="text-gray-500 text-sm">Pilih (Klik) nama pada bagan di samping untuk melihat rincian.</p>
@@ -127,7 +122,6 @@
 
         function prosesDataPeserta(data, namaLomba) {
             const baganContainer = document.getElementById('bagan-container');
-            
             if(!data || data.length === 0) {
                 baganContainer.innerHTML = `<div class="text-center mt-10"><i class="fa-regular fa-folder-open text-4xl text-gray-300 mb-2"></i><p class="text-gray-500">Belum ada data pendaftar.</p></div>`;
                 return;
@@ -136,23 +130,16 @@
             globalTeamsMap = {};
             const uniqueTeamsArray = [];
             let jenisLomba = namaLomba.toLowerCase();
-            
-            // CEK OTOMATIS: Apakah lomba ini butuh tim atau perorangan bebas?
-            let isIndividu = jenisLomba.includes("ludo") || jenisLomba.includes("domino") || jenisLomba.includes("karaoke") || jenisLomba.includes("ps 5");
+            let isIndividu = jenisLomba.includes("karaoke") || jenisLomba.includes("ps 5");
 
             if (isIndividu) {
-                // LOGIKA UNTUK LUDO/DOMINO: 
-                // Abaikan pengelompokan "Tim". Langsung ambil nama peserta baris demi baris!
                 data.forEach(p => {
                     let namaPeserta = p.nama && p.nama.trim() !== "" ? p.nama : (p.tim || "KOSONG");
                     uniqueTeamsArray.push(namaPeserta);
-                    
-                    // Isi map tunggal agar tidak error saat namanya diklik di bagan
                     globalTeamsMap[namaPeserta] = [namaPeserta];
                 });
             } else {
-                // LOGIKA UNTUK VOLLY/CERDAS CERMAT/BADMINTON: 
-                // Kelompokkan peserta yang memiliki nama "Tim" yang sama
+                // LOGIKA UNTUK LUDO/DOMINO (Sistem Meja) & CERDAS CERMAT/VOLLY (Sistem Tim)
                 data.forEach(p => {
                     const teamName = p.tim && p.tim.trim() !== "" ? p.tim : (p.nama || "KOSONG"); 
                     if (!globalTeamsMap[teamName]) {
@@ -163,7 +150,6 @@
                 });
             }
 
-            // LANGSUNG RENDER BAGAN 
             renderBaganCerdas(uniqueTeamsArray, namaLomba);
         }
 
@@ -172,33 +158,32 @@
             const infoBagan = document.getElementById('info-bagan-tipe');
             let html = '<div class="space-y-4">';
             let matchNumber = 1;
-            
             let jenisLomba = namaLomba.toLowerCase();
 
-            // 1. FORMAT LUDO & DOMINO (4 PESERTA DALAM 1 PERTANDINGAN - 1v1v1v1)
+            // 1. FORMAT LUDO & DOMINO (SISTEM MEJA - NAMA LANGSUNG MUNCUL 4 ORANG)
             if (jenisLomba.includes("ludo") || jenisLomba.includes("domino")) {
-                infoBagan.innerHTML = '<i class="fa-solid fa-dice mr-1 text-red-500"></i>Format: 4 Pemain per Match (1 vs 1 vs 1 vs 1)';
-                for (let i = 0; i < daftarTim.length; i += 4) {
-                    let p1 = daftarTim[i];
-                    let p2 = daftarTim[i+1] || "KOSONG";
-                    let p3 = daftarTim[i+2] || "KOSONG";
-                    let p4 = daftarTim[i+3] || "KOSONG";
-                    let matchName = "MATCH " + matchNumber;
+                infoBagan.innerHTML = '<i class="fa-solid fa-dice mr-1 text-red-500"></i>Format: 4 Pemain per Meja (1 vs 1 vs 1 vs 1)';
+                
+                daftarTim.forEach((namaMeja) => {
+                    let anggota = globalTeamsMap[namaMeja];
+                    let p1 = anggota[0] || "KOSONG";
+                    let p2 = anggota[1] || "KOSONG";
+                    let p3 = anggota[2] || "KOSONG";
+                    let p4 = anggota[3] || "KOSONG";
                     
                     html += `
                     <div class="match-card rounded-lg p-4 shadow border border-gray-200">
                         <div class="text-xs font-bold text-red-500 mb-3 border-b pb-1 flex justify-between">
-                            <span>${matchName}</span>
+                            <span class="text-sm font-black uppercase text-blue-900">${namaMeja}</span>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-sm font-bold text-gray-800">
-                            <div class="${p1 !== 'KOSONG' ? 'team-clickable bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100" onclick="${p1 !== 'KOSONG' ? `lihatDetailTim('${p1.replace(/'/g, "\\'")}')` : ''}">${p1}</div>
-                            <div class="${p2 !== 'KOSONG' ? 'team-clickable bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100" onclick="${p2 !== 'KOSONG' ? `lihatDetailTim('${p2.replace(/'/g, "\\'")}')` : ''}">${p2}</div>
-                            <div class="${p3 !== 'KOSONG' ? 'team-clickable bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100" onclick="${p3 !== 'KOSONG' ? `lihatDetailTim('${p3.replace(/'/g, "\\'")}')` : ''}">${p3}</div>
-                            <div class="${p4 !== 'KOSONG' ? 'team-clickable bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100" onclick="${p4 !== 'KOSONG' ? `lihatDetailTim('${p4.replace(/'/g, "\\'")}')` : ''}">${p4}</div>
+                            <div class="${p1 !== 'KOSONG' ? 'bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100">${p1}</div>
+                            <div class="${p2 !== 'KOSONG' ? 'bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100">${p2}</div>
+                            <div class="${p3 !== 'KOSONG' ? 'bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100">${p3}</div>
+                            <div class="${p4 !== 'KOSONG' ? 'bg-blue-50' : 'bg-gray-100'} p-3 rounded border border-blue-100">${p4}</div>
                         </div>
                     </div>`;
-                    matchNumber++;
-                }
+                });
             } 
             
             // 2. FORMAT CERDAS CERMAT (3 TIM DALAM 1 PERTANDINGAN - 2 vs 2 vs 2)
@@ -256,28 +241,24 @@
                         <div class="text-xs font-bold text-blue-500 mb-3 border-b pb-1">${matchName}</div>
                         <div class="flex items-center justify-between">
                             <div class="flex-1 text-center font-bold text-gray-800 p-3 rounded team-clickable bg-blue-50 border border-blue-100 break-words text-sm md:text-base" onclick="lihatDetailTim('${p1.replace(/'/g, "\\'")}')">${p1}</div>
-                            
                             <div class="bg-gray-800 text-white rounded px-3 py-1 text-xs font-black mx-2 shadow-sm">VS</div>
-                            
                             <div class="${p2 !== 'BYE (Menunggu Lawan)' ? 'team-clickable bg-blue-50 border-blue-100' : 'bg-gray-100 border-gray-200 text-gray-400'} flex-1 text-center font-bold p-3 rounded border break-words text-sm md:text-base" onclick="${p2 !== 'BYE (Menunggu Lawan)' ? `lihatDetailTim('${p2.replace(/'/g, "\\'")}')` : ''}">${p2}</div>
                         </div>
                     </div>`;
                     matchNumber++;
                 }
             }
-
             html += '</div>';
             container.innerHTML = html;
         }
 
-        // FUNGSI UNTUK MENAMPILKAN DETAIL TIM (DIBERSIHKAN DARI HEADER TIDAK PERLU)
+        // FUNGSI UNTUK MENAMPILKAN DETAIL TIM
         function lihatDetailTim(namaTim) {
             const listPeserta = document.getElementById('list-peserta');
             const anggota = globalTeamsMap[namaTim];
 
             if (!anggota) return;
 
-            // Tampilan detail disederhanakan: Hanya Label Utama dan Daftar Nama
             let detailHtml = `
                 <div class="w-full text-left">
                     <div class="bg-blue-600 text-white p-3 rounded-t-lg shadow-sm text-center font-bold text-lg">
@@ -294,16 +275,10 @@
                 `;
             });
 
-            detailHtml += `
-                    </ul>
-                </div>
-            `;
-
-            // Reset box layout (buang text center default)
+            detailHtml += `</ul></div>`;
             listPeserta.className = "bg-white rounded-lg p-2 flex-1 overflow-y-auto";
             listPeserta.innerHTML = detailHtml;
         }
-
     </script>
 </body>
 </html>
