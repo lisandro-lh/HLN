@@ -48,13 +48,10 @@
 
         <div id="detail-section" class="hidden-section">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Daftar Peserta -->
+                <!-- Daftar Tim & Peserta -->
                 <div class="glass-card rounded-2xl p-6 flex flex-col h-[600px]">
                     <div class="flex justify-between items-center mb-4 border-b pb-3">
-                        <h3 class="text-xl font-bold text-blue-900" id="judul-peserta">Daftar Peserta</h3>
-                        <button onclick="tambahData()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg font-bold transition flex items-center text-sm shadow">
-                            <i class="fa-solid fa-user-plus mr-2"></i>Tambah
-                        </button>
+                        <h3 class="text-xl font-bold text-blue-900" id="judul-peserta">Daftar Tim & Peserta</h3>
                     </div>
                     <div class="bg-white rounded-lg p-2 border border-gray-100 flex-1 overflow-y-auto" id="list-peserta">
                         <div class="text-center text-gray-500 mt-10">Memuat data...</div>
@@ -65,7 +62,7 @@
                 <div class="glass-card rounded-2xl p-6 flex flex-col h-[600px]">
                     <div class="mb-4 border-b pb-3">
                         <h3 class="text-xl font-bold text-blue-900" id="judul-bagan">Bagan Pertandingan</h3>
-                        <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-circle-info mr-1"></i>Sistem gugur / Matchup Round 1</p>
+                        <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-circle-info mr-1"></i>Sistem Matchup Antar Tim</p>
                     </div>
                     <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 flex-1 overflow-y-auto relative shadow-inner" id="bagan-container">
                     </div>
@@ -75,9 +72,8 @@
     </main>
 
     <script>
-        // URL WEB APP BARU ANDA
+        // URL WEB APP ANDA YANG BARU
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqEeykjmYojUkO3SNrg20HwOHmOntRpGRNfLclIDlSa8RZ2C3YD9Zq6KtCGG6BQSVf/exec';
-        let dataPesertaAktif = []; 
 
         function showLombaDetails() {
             const select = document.getElementById('lomba-select');
@@ -89,7 +85,7 @@
                 section.classList.remove('hidden-section');
                 const namaSheet = select.value; 
                 
-                document.getElementById('judul-peserta').innerText = "Peserta " + select.options[select.selectedIndex].text;
+                document.getElementById('judul-peserta').innerText = "Data " + select.options[select.selectedIndex].text;
                 document.getElementById('judul-bagan').innerText = "Bagan " + select.options[select.selectedIndex].text;
                 
                 listPeserta.innerHTML = '<div class="loader"></div><p class="text-center text-gray-500 text-sm mt-2">Menarik data dari Sheet ' + namaSheet + '...</p>';
@@ -103,8 +99,7 @@
                             baganContainer.innerHTML = '';
                             return;
                         }
-                        renderPeserta(result.data);
-                        renderBagan(dataPesertaAktif);
+                        prosesDataPeserta(result.data);
                     })
                     .catch(error => {
                         listPeserta.innerHTML = `<p class="text-red-500 text-center">Gagal koneksi ke server Apps Script.</p>`;
@@ -115,109 +110,91 @@
             }
         }
 
-        function renderPeserta(data) {
+        function prosesDataPeserta(data) {
             const listPeserta = document.getElementById('list-peserta');
-            listPeserta.innerHTML = ''; 
-            dataPesertaAktif = []; 
-
-            if(data.length <= 1) {
-                listPeserta.innerHTML = `<div class="text-center mt-10"><i class="fa-regular fa-folder-open text-4xl text-gray-300 mb-2"></i><p class="text-gray-500">Belum ada pendaftar di sheet ini.</p></div>`;
+            
+            if(!data || data.length === 0) {
+                listPeserta.innerHTML = `<div class="text-center mt-10"><i class="fa-regular fa-folder-open text-4xl text-gray-300 mb-2"></i><p class="text-gray-500">Belum ada data pendaftar.</p></div>`;
+                document.getElementById('bagan-container').innerHTML = '';
                 return;
             }
 
-            const ul = document.createElement('ul');
-            ul.className = "divide-y divide-gray-100";
-            
-            // Asumsi baris 1 (index 0) adalah Header
-            for (let i = 1; i < data.length; i++) {
-                const row = data[i];
-                
-                // Ambil Kolom pertama dan kedua yang berisi data. Sesuaikan indeks array jika format sheet Anda berbeda
-                // index 0: Timestamp/Nomor (tergantung isi), index 1: Nama, index 2: Unit
-                let nama = row[1] ? row[1].toString().trim() : "";
-                let unit = row[2] ? row[2].toString().trim() : "";
-                
-                if(nama === "") nama = "Peserta " + i;
+            // Kelompokkan pemain berdasarkan TIM
+            const teamsMap = {};
+            const uniqueTeamsArray = [];
 
-                dataPesertaAktif.push(nama);
+            data.forEach(p => {
+                const teamName = p.tim; 
+                
+                if (!teamsMap[teamName]) {
+                    teamsMap[teamName] = [];
+                    uniqueTeamsArray.push(teamName);
+                }
+                teamsMap[teamName].push(p.nama);
+            });
 
-                const li = document.createElement('li');
-                li.className = "py-3 flex items-center hover:bg-blue-50 px-3 rounded-lg transition duration-150";
-                li.innerHTML = `
-                    <div class="bg-blue-600 text-white h-8 w-8 rounded-md flex items-center justify-center font-bold text-sm mr-4 shadow-sm">
-                        ${i}
-                    </div>
-                    <div>
-                        <p class="text-gray-800 font-bold">${nama}</p>
-                        ${unit ? `<p class="text-xs text-gray-500"><i class="fa-solid fa-location-dot mr-1"></i>${unit}</p>` : ''}
+            // 1. Render Daftar Tim & Anggota
+            listPeserta.innerHTML = '';
+            uniqueTeamsArray.forEach(tim => {
+                const teamDiv = document.createElement('div');
+                teamDiv.className = "mb-4 border border-blue-200 rounded-lg overflow-hidden";
+                
+                teamDiv.innerHTML = `
+                    <div class="bg-blue-100 px-4 py-2 font-bold text-blue-900 border-b border-blue-200 flex justify-between items-center">
+                        <span><i class="fa-solid fa-users-line mr-2"></i>${tim}</span>
+                        <span class="text-xs bg-white text-blue-600 px-2 py-1 rounded-full shadow-sm">${teamsMap[tim].length} Anggota</span>
                     </div>
                 `;
-                ul.appendChild(li);
-            }
-            listPeserta.appendChild(ul);
+
+                const ul = document.createElement('ul');
+                ul.className = "divide-y divide-gray-100 px-4 py-2 bg-white";
+                teamsMap[tim].forEach((pemain, index) => {
+                    const li = document.createElement('li');
+                    li.className = "py-1.5 text-sm text-gray-700 flex items-center";
+                    li.innerHTML = `<span class="w-5 text-gray-400 text-xs font-bold">${index + 1}.</span> ${pemain}`;
+                    ul.appendChild(li);
+                });
+                
+                teamDiv.appendChild(ul);
+                listPeserta.appendChild(teamDiv);
+            });
+
+            // 2. Render Bagan (Berdasarkan Daftar Tim)
+            renderBagan(uniqueTeamsArray);
         }
 
-        function renderBagan(peserta) {
+        function renderBagan(daftarTim) {
             const container = document.getElementById('bagan-container');
             
-            if (peserta.length < 2) {
+            if (daftarTim.length < 2) {
                 container.innerHTML = `
                     <div class="flex flex-col items-center justify-center h-full text-gray-400">
                         <i class="fa-solid fa-sitemap text-5xl mb-3 opacity-50"></i>
-                        <p>Peserta belum cukup untuk membuat bagan pertandingan.</p>
+                        <p>Minimal butuh 2 Tim/Regu untuk membuat bagan.</p>
                     </div>`;
                 return;
             }
 
             let html = '<div class="space-y-4">';
             let matchNumber = 1;
-            for (let i = 0; i < peserta.length; i += 2) {
-                let p1 = peserta[i];
-                let p2 = peserta[i+1] || "<span class='text-green-500 italic'>BYE (Otomatis Lolos)</span>";
+            
+            for (let i = 0; i < daftarTim.length; i += 2) {
+                let p1 = daftarTim[i];
+                let p2 = daftarTim[i+1] || "<span class='text-green-500 italic'>BYE (Otomatis Lolos)</span>";
                 
                 html += `
                 <div class="match-card rounded-lg p-3 shadow border border-gray-200">
                     <div class="text-xs font-bold text-blue-500 mb-2 border-b pb-1">MATCH ${matchNumber}</div>
                     <div class="flex items-center justify-between">
-                        <div class="flex-1 text-center font-bold text-gray-700 px-2 break-words text-sm md:text-base">${p1}</div>
+                        <div class="flex-1 text-center font-bold text-gray-800 px-2 break-words text-sm md:text-base">${p1}</div>
                         <div class="bg-red-500 text-white rounded-full px-2 py-1 text-xs font-black mx-2 shadow-sm">VS</div>
-                        <div class="flex-1 text-center font-bold text-gray-700 px-2 break-words text-sm md:text-base">${p2}</div>
+                        <div class="flex-1 text-center font-bold text-gray-800 px-2 break-words text-sm md:text-base">${p2}</div>
                     </div>
                 </div>`;
                 matchNumber++;
             }
             html += '</div>';
             container.innerHTML = html;
-        }
-
-        function tambahData() {
-            const select = document.getElementById('lomba-select');
-            const namaLomba = select.value; // Ambil value sheet (misal "Volly")
-            
-            const nama = prompt(`Masukkan Nama Peserta untuk lomba ${select.options[select.selectedIndex].text}:`);
-            if (!nama) return;
-            
-            const unit = prompt("Masukkan Unit/UP3/ULP:");
-            if (!unit) return;
-
-            const listPeserta = document.getElementById('list-peserta');
-            listPeserta.innerHTML = '<div class="loader"></div><p class="text-center text-blue-500 text-sm mt-2">Menyimpan langsung ke Sheet ' + namaLomba + '...</p>';
-
-            const dataToSend = { nama: nama, lomba: namaLomba, unit: unit };
-
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify(dataToSend)
-            })
-            .then(response => response.text())
-            .then(result => {
-                alert("Status: " + result);
-                showLombaDetails(); 
-            })
-            .catch(error => {
-                alert("Terjadi kesalahan saat menyimpan data.");
-                showLombaDetails();
-            });
         }
     </script>
 </body>
