@@ -16,6 +16,17 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .hidden-section { display: none; }
+        /* Animasi Loading */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen font-sans text-gray-800">
@@ -24,17 +35,16 @@
     <header class="bg-white shadow-lg sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <!-- Logo PLN -->
-            <img src="https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png" alt="Logo PLN" class="h-12 md:h-16 object-contain">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png" alt="Logo PLN" class="h-10 md:h-14 object-contain">
             
+            <!-- Judul Tengah -->
             <div class="text-center flex-1 mx-4">
                 <h1 class="text-xl md:text-3xl font-extrabold text-blue-900 tracking-tight">HLN UP3 TOBELO 2026</h1>
                 <p class="text-sm md:text-base text-gray-600 font-medium mt-1">Dashboard Pendaftaran & Bagan Lomba</p>
             </div>
 
-            <!-- Logo DANATARA -->
-            <div class="h-12 md:h-16 flex items-center justify-center border-2 border-gray-800 px-4 font-bold text-gray-800 tracking-widest uppercase bg-gray-50">
-                DANATARA
-            </div>
+            <!-- Logo DANATARA BARU -->
+            <img src="danantara.png" alt="Logo Danantara" class="h-10 md:h-14 object-contain rounded-md">
         </div>
     </header>
 
@@ -71,47 +81,45 @@
                 <option value="">-- Silakan Pilih Lomba --</option>
                 <option value="Ludo">Ludo</option>
                 <option value="Domino">Domino</option>
-                <option value="Volly">Bola Volly</option>
-                <option value="PS5">PlayStation 5</option>
+                <option value="Bola Volly">Bola Volly</option>
+                <option value="PlayStation 5">PlayStation 5</option>
                 <option value="Badminton">Badminton</option>
-                <option value="TenisMeja">Tenis Meja</option>
+                <option value="Tenis Meja">Tenis Meja</option>
                 <option value="Karaoke">Karaoke</option>
-                <option value="CerdasCermat">Cerdas Cermat</option>
+                <option value="Cerdas Cermat">Cerdas Cermat</option>
             </select>
         </div>
 
-        <!-- Detail Lomba Section (Hidden by default) -->
+        <!-- Detail Lomba Section -->
         <div id="detail-section" class="hidden-section">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
-                <!-- Daftar Peserta & Edit -->
-                <div class="glass-card rounded-2xl p-6">
+                <!-- Daftar Peserta & Tambah/Edit -->
+                <div class="glass-card rounded-2xl p-6 flex flex-col h-[500px]">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-2xl font-bold text-blue-900" id="judul-peserta">Daftar Peserta</h3>
-                        <button onclick="editData()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-bold transition">
-                            <i class="fa-solid fa-pen-to-square mr-2"></i>Edit Data
+                        <h3 class="text-xl font-bold text-blue-900" id="judul-peserta">Daftar Peserta</h3>
+                        <button onclick="tambahData()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-bold transition flex items-center text-sm shadow">
+                            <i class="fa-solid fa-plus mr-2"></i>Tambah
                         </button>
                     </div>
                     
-                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 h-64 overflow-y-auto" id="list-peserta">
-                        <!-- List Peserta muncul di sini -->
-                        <ul class="list-disc pl-5 text-gray-700 space-y-2">
-                            <li>Peserta 1 - Unit A</li>
-                            <li>Peserta 2 - Unit B</li>
-                            <li>Peserta 3 - Unit C</li>
-                            <li><em class="text-gray-400">Data diambil dari Google Sheets...</em></li>
-                        </ul>
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 flex-1 overflow-y-auto" id="list-peserta">
+                        <!-- Konten list peserta akan diisi oleh JavaScript -->
+                        <div class="text-center text-gray-500 mt-10">Pilih cabang lomba untuk melihat peserta</div>
                     </div>
                 </div>
 
                 <!-- Bagan Lomba -->
-                <div class="glass-card rounded-2xl p-6">
-                    <h3 class="text-2xl font-bold text-blue-900 mb-4" id="judul-bagan">Bagan Pertandingan</h3>
-                    <div class="bg-white rounded-lg p-4 border border-gray-200 flex items-center justify-center h-64 shadow-inner">
-                        <div class="text-center">
-                            <i class="fa-solid fa-sitemap text-5xl text-gray-300 mb-3"></i>
-                            <p class="text-gray-500" id="info-bagan">Pilih lomba untuk melihat bagan.</p>
+                <div class="glass-card rounded-2xl p-6 flex flex-col h-[500px]">
+                    <h3 class="text-xl font-bold text-blue-900 mb-4" id="judul-bagan">Bagan Pertandingan</h3>
+                    <div class="bg-white rounded-lg p-4 border border-gray-200 flex items-center justify-center flex-1 shadow-inner relative overflow-hidden">
+                        <div class="text-center z-10">
+                            <i class="fa-solid fa-sitemap text-6xl text-gray-300 mb-4 drop-shadow-md"></i>
+                            <h4 class="text-lg font-bold text-gray-700" id="nama-bagan">Pilih Lomba</h4>
+                            <p class="text-gray-500 mt-2 text-sm" id="info-bagan">Bagan akan di-generate berdasarkan jumlah peserta.</p>
                         </div>
+                        <!-- Dekorasi background bagan -->
+                        <div class="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
                     </div>
                 </div>
 
@@ -119,39 +127,119 @@
         </div>
     </main>
 
-    <footer class="text-center py-6 text-gray-500 text-sm mt-auto">
+    <footer class="text-center py-6 text-gray-500 text-sm mt-auto bg-white border-t border-gray-200">
         &copy; 2026 PLN UP3 Tobelo & DANATARA. All rights reserved.
     </footer>
 
-    <!-- Logika Interaktif -->
+    <!-- Logika Interaktif & Fetch API -->
     <script>
-        // Fungsi untuk menampilkan data saat Dropdown dipilih
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdvjEYntWp445kiY2atdPQGP-J-JbDuPRGP0WyUgN8pdBuQRPuIbMo7lapS_5iPuoI/exec';
+        let sheetData = []; 
+
         function showLombaDetails() {
             const select = document.getElementById('lomba-select');
             const section = document.getElementById('detail-section');
-            const judulPeserta = document.getElementById('judul-peserta');
-            const infoBagan = document.getElementById('info-bagan');
+            const listPeserta = document.getElementById('list-peserta');
             
             if(select.value !== "") {
                 section.classList.remove('hidden-section');
-                
-                // Update teks sesuai pilihan
                 const namaLomba = select.options[select.selectedIndex].text;
-                judulPeserta.innerText = "Daftar Peserta - " + namaLomba;
                 
-                // Simulasi memuat bagan (Nantinya diganti dengan gambar bagan asli/URL iframe sheet)
-                infoBagan.innerHTML = `Bagan untuk <strong>${namaLomba}</strong> sedang disiapkan dari Spreadsheet.`;
+                document.getElementById('judul-peserta').innerText = "Daftar Peserta - " + namaLomba;
+                document.getElementById('nama-bagan').innerText = "Bagan " + namaLomba;
+                document.getElementById('info-bagan').innerText = "Status: Penyisihan (Menunggu Update Panitia)";
                 
-                // TODO: Di sini nanti ditempatkan fungsi "fetch()" untuk menarik data betulan dari Google Apps Script
+                listPeserta.innerHTML = '<div class="loader"></div><p class="text-center text-gray-500 text-sm mt-2">Mengambil data dari server...</p>';
+
+                fetch(SCRIPT_URL)
+                    .then(response => response.json())
+                    .then(data => {
+                        sheetData = data; 
+                        renderPeserta(namaLomba);
+                    })
+                    .catch(error => {
+                        listPeserta.innerHTML = `<p class="text-red-500 text-center">Gagal memuat data: ${error}</p>`;
+                    });
             } else {
                 section.classList.add('hidden-section');
             }
         }
 
-        // Fungsi ketika tombol Edit diklik
-        function editData() {
-            alert("Untuk mengedit dan menyimpan langsung ke Google Sheets secara otomatis dari web ini, kita perlu mengaktifkan 'Google Apps Script Web App'.\n\nSaat ini tombol ini adalah simulasi antarmuka.");
-            // Logika untuk menampilkan form edit akan masuk di sini
+        function renderPeserta(namaLomba) {
+            const listPeserta = document.getElementById('list-peserta');
+            listPeserta.innerHTML = ''; 
+
+            const ul = document.createElement('ul');
+            ul.className = "divide-y divide-gray-200";
+            
+            let count = 0;
+            for (let i = 1; i < sheetData.length; i++) {
+                const row = sheetData[i];
+                const rowString = row.join(' ').toLowerCase();
+                
+                if (rowString.includes(namaLomba.toLowerCase())) {
+                    count++;
+                    const li = document.createElement('li');
+                    li.className = "py-3 flex items-center justify-between hover:bg-blue-50 px-2 rounded transition";
+                    
+                    let infoTeks = row.filter(cell => {
+                        let c = cell.toString().toLowerCase();
+                        return c !== "" && c !== namaLomba.toLowerCase() && !c.includes('gmt');
+                    }).join(' | ');
+
+                    if(infoTeks === "") infoTeks = "Peserta " + count;
+
+                    li.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 text-blue-700 h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm mr-3">
+                                ${count}
+                            </div>
+                            <span class="text-gray-700 font-medium">${infoTeks}</span>
+                        </div>
+                    `;
+                    ul.appendChild(li);
+                }
+            }
+
+            if (count > 0) {
+                listPeserta.appendChild(ul);
+            } else {
+                listPeserta.innerHTML = `
+                    <div class="text-center mt-10">
+                        <i class="fa-regular fa-folder-open text-4xl text-gray-300 mb-2"></i>
+                        <p class="text-gray-500">Belum ada peserta yang terdaftar untuk lomba <strong>${namaLomba}</strong>.</p>
+                    </div>`;
+            }
+        }
+
+        function tambahData() {
+            const select = document.getElementById('lomba-select');
+            const namaLomba = select.options[select.selectedIndex].text;
+            
+            const nama = prompt(`Masukkan Nama Peserta untuk lomba ${namaLomba}:`);
+            if (!nama) return;
+            
+            const unit = prompt("Masukkan Unit/UP3/ULP asal peserta:");
+            if (!unit) return;
+
+            const listPeserta = document.getElementById('list-peserta');
+            listPeserta.innerHTML = '<div class="loader"></div><p class="text-center text-blue-500 text-sm mt-2">Menyimpan data ke sistem...</p>';
+
+            const dataToSend = { nama: nama, lomba: namaLomba, unit: unit };
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(dataToSend)
+            })
+            .then(response => response.text())
+            .then(result => {
+                alert("Berhasil: " + result);
+                showLombaDetails(); 
+            })
+            .catch(error => {
+                alert("Terjadi kesalahan saat menyimpan data.");
+                showLombaDetails();
+            });
         }
     </script>
 </body>
