@@ -84,7 +84,7 @@
     </main>
 
     <script>
-        // URL API SUDAH DIGANTI DENGAN YANG TERBARU
+        // URL API
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRHkwlcEA0R0-YQRPVnJT8fxJIDm-Cxs8EVnSO3CcCJ7Rv_l-4JzY3-FfNZXh23UDb/exec';
         let globalTeamsMap = {}; 
 
@@ -170,18 +170,19 @@
                 }
             }
 
+            // Cari kolom awal mula bagan (mengabaikan data pribadi/peserta)
             let startCol = -1; 
-            for (let i = 4; i < headerRow.length; i++) {
+            for (let i = 2; i < headerRow.length; i++) {
                 let h = headerRow[i] ? headerRow[i].toString().toLowerCase() : "";
-                if (h.includes("babak") || h.includes("penyisihan") || h.includes("perempat") || h.includes("urutan") || h.includes("meja") || h.includes("undian")) {
+                if (h.includes("babak") || h.includes("penyisihan") || h.includes("perempat") || h.includes("semi") || h.includes("final") || h.includes("meja") || h.includes("undian")) {
                     startCol = i;
                     break;
                 }
             }
-            if(startCol === -1) startCol = 7; 
+            if(startCol === -1) startCol = 4; // Default jika gagal menemukan kolom bagan
 
-            // Bangun Tabel Visual
-            let html = '<table class="w-full text-sm border-separate" style="border-spacing: 6px;">';
+            // Bangun Tabel Visual (Bagan)
+            let html = '<table class="w-full text-sm border-separate" style="border-spacing: 10px 4px;">';
             html += '<thead><tr>';
             for (let c = startCol; c < headerRow.length; c++) {
                 let text = headerRow[c] ? headerRow[c].toString() : "";
@@ -190,59 +191,59 @@
             }
             html += '</tr></thead><tbody>';
 
+            // Looping baris (Jangan skip baris kosong agar spasi bagan / bracket tetap terjaga vertikalnya)
             for (let r = headerRowIndex + 1; r < data2D.length; r++) {
-                let rowEmpty = true;
                 let rowHtml = '<tr>';
+                let hasDataInRow = false; 
                 
                 for (let c = startCol; c < headerRow.length; c++) {
                     let textHeader = headerRow[c] ? headerRow[c].toString().toLowerCase() : "";
                     if(textHeader.includes('helper')) continue;
 
                     let cell = data2D[r][c] ? data2D[r][c].toString().trim() : "";
-                    if (cell !== "") rowEmpty = false;
+                    if (cell !== "") hasDataInRow = true;
 
-                    let cellStyle = "min-w-[160px] h-full p-2 flex items-center justify-center text-center transition-all duration-200 rounded-lg ";
+                    let cellStyle = "min-w-[150px] h-[40px] p-2 flex items-center justify-center text-center transition-all duration-200 rounded-lg ";
                     let innerHtml = cell;
                     let onClick = "";
 
-                    // LOGIKA CEK KOLOM SKOR / NILAI / POIN
                     let isScoreCol = textHeader.includes("skor") || textHeader.includes("nilai") || textHeader.includes("poin") || textHeader.includes("(1-100)");
 
-                    if (isScoreCol) {
-                        // KARTU INPUT SKOR (KUNING)
+                    if (cell === "") {
+                        // KOSONG - Spasi untuk jarak antar bagan
+                        cellStyle = "min-w-[150px] h-[40px] bg-transparent"; 
+                    } 
+                    else if (isScoreCol) {
                         cellStyle += "font-mono font-bold text-yellow-800 bg-yellow-50 border-2 border-yellow-400 shadow-sm cursor-pointer hover:bg-yellow-200 hover:-translate-y-1";
-                        innerHtml = cell !== "" ? cell : "<span class='text-[11px] text-yellow-700'><i class='fa-solid fa-pen'></i> Isi Skor</span>";
+                        innerHtml = cell !== "" ? cell : "<span class='text-[11px] text-yellow-700'><i class='fa-solid fa-pen'></i> Isi</span>";
                         onClick = `onclick="editSkor('${namaLomba.replace(/'/g, "\\'")}', ${r + 1}, ${c + 1}, '${cell.replace(/'/g, "\\'")}', this)"`;
-                        rowEmpty = false; 
                     }
-                    else if (cell === "") {
-                        cellStyle += "bg-transparent"; 
+                    else if (cell.toLowerCase().includes("match") || cell.toLowerCase().includes("vs") || cell.toLowerCase().includes("menunggu") || cell.toLowerCase().includes("kalah") || cell.toLowerCase().includes("bye")) {
+                        cellStyle += "text-[11px] font-bold text-gray-400 uppercase tracking-wide border-b-2 border-gray-200";
                     } 
-                    else if (cell.toLowerCase().includes("match") || cell.toLowerCase().includes("menunggu") || cell.toLowerCase().includes("kalah") || cell.toLowerCase().includes("sesi") || cell.toLowerCase().includes("bye")) {
-                        cellStyle += "text-[11px] font-bold text-gray-500 bg-gray-100 uppercase tracking-wide border border-gray-200";
-                    } 
-                    else if (cell.includes("TIM") || cell.includes("Juara") || cell.includes("🏆") || cell.includes("🥇") || cell.includes("🥈") || cell.includes("🥉") || globalTeamsMap[cell]) {
-                        cellStyle += "font-bold text-blue-900 bg-blue-50 border-2 border-blue-200 shadow-sm";
-                        if (globalTeamsMap[cell]) {
-                            cellStyle += " cursor-pointer hover:bg-blue-200 hover:-translate-y-1";
-                            onClick = `onclick="lihatDetailTim('${cell.replace(/'/g, "\\'")}')"`;
-                        }
+                    else if (cell.includes("Juara") || cell.includes("🏆") || cell.includes("🥇")) {
+                        cellStyle += "font-bold text-yellow-900 bg-gradient-to-r from-yellow-200 to-yellow-400 border-2 border-yellow-500 shadow-md transform scale-105";
+                    }
+                    else if (globalTeamsMap[cell] || cell.includes("TIM")) {
+                        cellStyle += "font-bold text-blue-900 bg-blue-50 border-2 border-blue-400 shadow-sm cursor-pointer hover:bg-blue-200 hover:-translate-y-1";
+                        onClick = `onclick="lihatDetailTim('${cell.replace(/'/g, "\\'")}')"`;
                     } 
                     else {
-                        cellStyle += "font-semibold text-gray-700 bg-white border border-gray-200 shadow-sm";
+                        cellStyle += "font-semibold text-gray-700 bg-white border-2 border-gray-300 shadow-sm";
                     }
 
-                    rowHtml += `<td class="p-0 align-middle h-[45px]"><div class="${cellStyle}" ${onClick}>${innerHtml}</div></td>`;
+                    rowHtml += `<td class="p-0 align-middle"><div class="${cellStyle}" ${onClick}>${innerHtml}</div></td>`;
                 }
                 rowHtml += '</tr>';
                 
-                if (!rowEmpty) html += rowHtml; 
+                // Render semua baris (termasuk yang kosong) agar bentuk hierarki bagan tidak rusak
+                html += rowHtml; 
             }
             html += '</tbody></table>';
             baganContainer.innerHTML = html;
         }
 
-        // FUNGSI BARU: MENGIRIM SKOR/NILAI KE GOOGLE SHEET
+        // FUNGSI: MENGIRIM SKOR/NILAI KE GOOGLE SHEET
         function editSkor(namaLomba, row, col, currentScore, element) {
             let newScore = prompt(`Masukkan Skor / Nilai (Sheet: ${namaLomba}):`, currentScore);
             
